@@ -1,4 +1,29 @@
 
+"""
+MCP Plots Server Entry Point
+
+Main module for the MCP (Model Context Protocol) plots server.
+Handles server configuration, argument parsing, logging setup, and server lifecycle.
+
+This server provides chart generation capabilities to MCP clients like Cursor IDE,
+supporting multiple chart types (line, bar, pie, scatter, etc.) with Mermaid-first
+output for universal compatibility.
+
+Usage:
+    python -m src [options]
+    mcp-plots [options]
+    
+Examples:
+    # Start with default settings (HTTP on port 8000)
+    python -m src
+    
+    # Start with stdio transport for MCP client integration
+    python -m src --transport stdio
+    
+    # Start with custom chart defaults
+    python -m src --chart-width 1200 --chart-height 800
+"""
+
 import argparse
 import logging
 import os
@@ -11,7 +36,25 @@ from src.app.server import create_server
 
 @dataclass
 class ServerConfig:
-    """Configuration for the MCP server with environment variable support."""
+    """
+    Configuration for the MCP server with environment variable support.
+    
+    This configuration class handles all server settings including transport type,
+    networking options, logging configuration, and chart generation defaults.
+    Settings can be provided via environment variables or command line arguments.
+    
+    Attributes:
+        transport: MCP transport type ("streamable-http" or "stdio")
+        stateless_http: Whether to use stateless HTTP mode
+        host: Host address for HTTP transport (ignored for stdio)
+        port: Port number for HTTP transport (ignored for stdio)
+        log_level: Python logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        debug: Enable debug mode with verbose logging
+        default_chart_width: Default width for generated charts in pixels
+        default_chart_height: Default height for generated charts in pixels
+        default_dpi: Default resolution for chart images
+        max_data_points: Maximum number of data points allowed per chart
+    """
     
     # MCP Server settings
     transport: str = "streamable-http"
@@ -21,17 +64,38 @@ class ServerConfig:
     log_level: str = "INFO"
     debug: bool = False
     
-    # Chart generation settings
+    # Chart generation settings  
     default_chart_width: int = 800
     default_chart_height: int = 600
     default_dpi: int = 100
     max_data_points: int = 10000
     
     @classmethod
-    def from_env_and_args(cls) -> 'ServerConfig':
-        """Create configuration from environment variables and command line arguments."""
+    def from_env_and_args(cls) -> "ServerConfig":
+        """
+        Create configuration from environment variables and command line arguments.
         
-        # Environment variable defaults
+        Reads configuration in this priority order:
+        1. Command line arguments (highest priority)
+        2. Environment variables 
+        3. Class defaults (lowest priority)
+        
+        Environment Variables:
+            MCP_TRANSPORT: Transport type (streamable-http, stdio)
+            MCP_HOST: Host address for HTTP mode
+            MCP_PORT: Port number for HTTP mode
+            LOG_LEVEL: Logging level
+            MCP_DEBUG: Enable debug mode (true/1/yes/on)
+            CHART_DEFAULT_WIDTH: Default chart width in pixels
+            CHART_DEFAULT_HEIGHT: Default chart height in pixels
+            CHART_DEFAULT_DPI: Default chart DPI
+            CHART_MAX_DATA_POINTS: Maximum data points per chart
+            
+        Returns:
+            ServerConfig: Configured instance with all settings resolved
+        """
+        
+        # Load environment variable defaults
         config = cls(
             transport=os.getenv("MCP_TRANSPORT", "streamable-http"),
             host=os.getenv("MCP_HOST", "0.0.0.0"),
@@ -45,7 +109,10 @@ class ServerConfig:
         )
         
         # Command line argument parsing
+        # Set up argument parser with comprehensive help text
         parser = argparse.ArgumentParser(description="Start the Plots MCP Server")
+        
+        # Transport and networking options
         parser.add_argument("-t", "--transport", default=config.transport, 
                           choices=["streamable-http", "stdio"], 
                           help="Transport for MCP server (env: MCP_TRANSPORT)")
@@ -53,11 +120,15 @@ class ServerConfig:
                           help="Host address for HTTP transport (env: MCP_HOST)")
         parser.add_argument("--port", default=config.port, type=int, 
                           help="Port for HTTP transport (env: MCP_PORT)")
+        
+        # Logging configuration
         parser.add_argument("--log-level", default=config.log_level, type=str,
                           choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                           help="Logging level (env: LOG_LEVEL)")
         parser.add_argument("--debug", action="store_true", default=config.debug,
                           help="Enable debug mode (env: MCP_DEBUG)")
+        
+        # Chart generation defaults
         parser.add_argument("--chart-width", default=config.default_chart_width, type=int,
                           help="Default chart width (env: CHART_DEFAULT_WIDTH)")
         parser.add_argument("--chart-height", default=config.default_chart_height, type=int,
@@ -69,7 +140,8 @@ class ServerConfig:
         
         args = parser.parse_args()
         
-        # Override config with command line arguments
+        # Override config with command line arguments (highest priority)
+        # This allows CLI args to override both env vars and defaults
         config.transport = args.transport
         config.host = args.host
         config.port = args.port
@@ -83,7 +155,13 @@ class ServerConfig:
         return config
     
     def to_dict(self) -> Dict[str, Any]:
-        """Convert configuration to dictionary for logging/debugging."""
+        """
+        Convert configuration to dictionary for logging and debugging.
+        
+        Returns:
+            Dict[str, Any]: Nested dictionary with server and chart settings
+                organized for easy reading in logs and debug output
+        """
         return {
             "server": {
                 "transport": self.transport,
@@ -102,29 +180,50 @@ class ServerConfig:
 
 
 def _configure_logging(level: str):
-    """Configure logging with the specified level."""
+    """
+    Configure Python logging with the specified level.
+    
+    Sets up a standardized logging format with timestamps, logger names,
+    and message levels. Falls back to INFO level if an invalid level is provided.
+    
+    Args:
+        level: Logging level name (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    """
     numeric_level = getattr(logging, level.upper(), logging.INFO)
     logging.basicConfig(
         level=numeric_level, 
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
 
 def main():
-    """Main entry point for the MCP server."""
+    """
+    Main entry point for the MCP server.
+    
+    Orchestrates the complete server lifecycle:
+    1. Load configuration from environment variables and CLI arguments
+    2. Set up logging based on configuration
+    3. Create and configure the MCP server instance
+    4. Register chart generation capabilities
+    5. Start the server with the specified transport
+    6. Handle graceful shutdown on interruption
+    
+    Raises:
+        SystemExit: On critical errors that prevent server startup
+    """
     try:
         # Load configuration from environment and command line
         config = ServerConfig.from_env_and_args()
         
-        # Configure logging
+        # Configure logging based on user preferences
         _configure_logging(config.log_level)
         logger = logging.getLogger(__name__)
         
-        # Log configuration
+        # Log startup information for debugging
         logger.info("Starting Plots MCP Server...")
         logger.info(f"Configuration: {config.to_dict()}")
         
-        # Create and configure server
+        # Create and configure server with resolved settings
         server = create_server({
             "transport": config.transport,
             "stateless_http": config.stateless_http,
@@ -142,16 +241,20 @@ def main():
             }
         })
         
-        # Setup and run server
+        # Initialize MCP capabilities (tools, prompts, resources)
         server.setup_mcp_server_and_capabilities()
+        
+        # Start the server - this blocks until interrupted
         server.run()
         
     except KeyboardInterrupt:
+        # Graceful shutdown on Ctrl+C
         logger.info("Server stopped by user.")
     except Exception as e:
+        # Log critical errors and exit with error code
         logger.critical(f"Server failed to start: {e}", exc_info=True)
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

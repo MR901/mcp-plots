@@ -11,14 +11,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng16-16 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy code
-COPY requirements.txt ${APP_DIR}/requirements.txt
+# Copy project files
+COPY pyproject.toml ${APP_DIR}/pyproject.toml
 COPY src/ ${APP_DIR}/src/
 COPY README.md ${APP_DIR}/README.md
 
 # Install Python deps
 RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir .
 
 # Runtime env
 ENV PYTHONUNBUFFERED=1 \

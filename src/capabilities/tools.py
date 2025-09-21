@@ -28,7 +28,7 @@ def _load_user_config() -> None:
     config_path = _get_config_file_path()
     try:
         if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 saved_config = json.load(f)
                 _user_config["user_preferences"] = saved_config.get("user_preferences", {})
                 logger.info("User configuration loaded successfully")
@@ -41,7 +41,7 @@ def _save_user_config() -> None:
     """Save user configuration to file."""
     config_path = _get_config_file_path()
     try:
-        with open(config_path, 'w') as f:
+        with open(config_path, "w") as f:
             json.dump(_user_config, f, indent=2)
         logger.info("User configuration saved successfully")
     except Exception as e:
@@ -74,7 +74,7 @@ def _get_help_info() -> Dict[str, Any]:
         "help": {
             "chart_types": [t.value for t in ChartType],
             "themes": [t.value for t in Theme],
-            "output_formats": ["MCP_IMAGE", "MCP_TEXT", "MERMAID"],
+            "output_formats": ["MERMAID", "MCP_IMAGE", "MCP_TEXT"],
             "special_modes": {
                 "help": "Get this help information",
                 "suggest": "Analyze data and suggest field mappings"
@@ -140,10 +140,10 @@ def _looks_like_date(value: str) -> bool:
     """Simple heuristic to detect date-like strings."""
     if not isinstance(value, str):
         return False
-    date_indicators = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 
-                      'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
-                      '2020', '2021', '2022', '2023', '2024', '2025',
-                      '-', '/', 'q1', 'q2', 'q3', 'q4']
+    date_indicators = ["jan", "feb", "mar", "apr", "may", "jun", 
+                      "jul", "aug", "sep", "oct", "nov", "dec",
+                      "2020", "2021", "2022", "2023", "2024", "2025",
+                      "-", "/", "q1", "q2", "q3", "q4"]
     return any(indicator in value.lower() for indicator in date_indicators)
 
 
@@ -307,7 +307,7 @@ def register_tools(mcp_server, config: Dict[str, Any] = None):
 ```javascript
 // Set your preferred format and theme
 configure_preferences({{
-  output_format: "mcp_image",  // "mermaid", "mcp_image", "mcp_text"
+  output_format: "mermaid",  // "mermaid", "mcp_image", "mcp_text"
   theme: "dark",               // "default", "dark", "seaborn", "minimal"
   chart_width: 1000
 }})
@@ -393,9 +393,9 @@ configure_preferences({{reset_to_defaults: true}})
 
             # Filter config to only valid ChartConfig parameters
             valid_config_params = {
-                'width', 'height', 'title', 'x_title', 'y_title', 'theme', 'colors',
-                'background_color', 'grid_color', 'text_color', 'output_format',
-                'output_targets', 'display_mode', 'dpi', 'show_grid', 'show_legend'
+                "width", "height", "title", "x_title", "y_title", "theme", "colors",
+                "background_color", "grid_color", "text_color", "output_format",
+                "output_targets", "display_mode", "dpi", "show_grid", "show_legend"
             }
             
             # Start with user preferences as base config
@@ -417,13 +417,13 @@ configure_preferences({{reset_to_defaults: true}})
             final_config = {**base_config, **filtered_config, "output_format": fmt}
             
             # Convert theme string to Theme enum if needed
-            if 'theme' in final_config and isinstance(final_config['theme'], str):
+            if "theme" in final_config and isinstance(final_config["theme"], str):
                 try:
                     from src.visualization.chart_config import Theme
-                    final_config['theme'] = Theme(final_config['theme'])
+                    final_config["theme"] = Theme(final_config["theme"])
                 except ValueError:
                     # If invalid theme string, use user preference or default
-                    final_config['theme'] = Theme(user_prefs.get('theme', 'default'))
+                    final_config["theme"] = Theme(user_prefs.get("theme", "default"))
             
             cfg = ChartConfig(**final_config)
 

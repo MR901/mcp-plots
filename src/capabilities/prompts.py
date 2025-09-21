@@ -1,11 +1,32 @@
+"""
+MCP Prompts for Visualization Workflows
+
+This module registers prompts that provide guidance and instructions for using
+the chart generation capabilities. Prompts help MCP clients understand how to
+effectively use the visualization tools and follow best practices.
+
+The prompts serve as built-in documentation that can be accessed by MCP clients
+to get contextual help and usage examples for chart generation workflows.
+"""
+
 from __future__ import annotations
 
 from typing import Dict, Any, Optional
 
 
 def register_prompts(mcp_server, config: Optional[Dict[str, Any]] = None):
-    """Register prompts for visualization workflows."""
+    """
+    Register visualization workflow prompts with the MCP server.
+    
+    Adds helpful prompts that guide users through chart generation workflows,
+    including tool usage instructions, field mapping guidance, and best practices.
+    
+    Args:
+        mcp_server: The FastMCP server instance to register prompts with
+        config: Optional configuration dictionary (currently unused)
+    """
 
+    # Comprehensive workflow guide for chart generation
     GUIDE = (
         "You can render charts from tabular data using tools.\n"
         "Workflow:\n"
@@ -21,7 +42,16 @@ def register_prompts(mcp_server, config: Optional[Dict[str, Any]] = None):
 
     @mcp_server.prompt()
     def visualization_guide() -> str:
-        """Instructions for using visualization tools in this MCP server."""
+        """
+        Comprehensive instructions for using visualization tools in this MCP server.
+        
+        Provides step-by-step workflow guidance for generating charts from data,
+        including tool usage patterns, field mapping strategies, and optimization
+        tips for the best user experience.
+        
+        Returns:
+            str: Detailed workflow instructions and best practices
+        """
         return GUIDE
 
 
