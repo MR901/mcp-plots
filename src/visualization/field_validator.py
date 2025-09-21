@@ -11,10 +11,15 @@ from typing import Set, List, Dict, Any, Union
 import pandas as pd
 
 from .chart_config import ChartData, ChartType
+from ..domain.exceptions import (
+    DataValidationError, EmptyDataError, MissingFieldError, 
+    FieldNotFoundError, InvalidDataFormatError
+)
 
 
-class FieldValidationError(ValueError):
-    """Raised when chart field validation fails."""
+# Keep old exception for backward compatibility
+class FieldValidationError(DataValidationError):
+    """Legacy exception - use specific exceptions instead."""
     pass
 
 
@@ -53,11 +58,7 @@ class FieldValidator:
                 missing_fields.append(field_name)
         
         if missing_fields:
-            field_list = ", ".join(missing_fields)
-            raise FieldValidationError(
-                f"{chart_type.value.title()} chart requires {field_list}. "
-                f"Please provide these field mappings."
-            )
+            raise MissingFieldError(missing_fields, chart_type.value)
         
         # Validate that mapped fields exist in the data
         df = FieldValidator._prepare_dataframe(chart_data.data)
@@ -69,12 +70,14 @@ class FieldValidator:
                 missing_columns.append(f"{field_name}='{field_value}'")
         
         if missing_columns:
-            column_list = ", ".join(missing_columns)
-            available_columns = ", ".join(df.columns.tolist())
-            raise FieldValidationError(
-                f"Mapped fields not found in data: {column_list}. "
-                f"Available columns: {available_columns}"
-            )
+            # Parse missing columns back to field mappings dict
+            missing_mappings = {}
+            for col_str in missing_columns:
+                if "=" in col_str:
+                    field, mapping = col_str.split("=", 1)
+                    missing_mappings[field] = mapping.strip("'\"")
+            
+            raise FieldNotFoundError(missing_mappings, df.columns.tolist())
     
     @staticmethod
     def validate_optional_fields(chart_data: ChartData, *field_names: str) -> Dict[str, bool]:
@@ -146,12 +149,12 @@ class FieldValidator:
         """
         if isinstance(data, list):
             if not data:
-                raise FieldValidationError("Data cannot be empty")
+                raise EmptyDataError("data")
         elif isinstance(data, pd.DataFrame):
             if data.empty:
-                raise FieldValidationError("Data cannot be empty")
+                raise EmptyDataError("data")
         else:
-            raise FieldValidationError("Data must be a list of dictionaries or pandas DataFrame")
+            raise InvalidDataFormatError("a pandas DataFrame or list of dictionaries", type(data).__name__)
     
     @staticmethod
     def get_chart_type_help(chart_type: ChartType) -> str:

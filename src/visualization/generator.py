@@ -298,7 +298,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.SCATTER)
         plt.close(fig)
         return result
 
@@ -321,7 +321,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.HEATMAP)
         plt.close(fig)
         return result
 
@@ -345,7 +345,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.BOXPLOT)
         plt.close(fig)
         return result
 
@@ -365,7 +365,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.HISTOGRAM)
         plt.close(fig)
         return result
 
@@ -405,7 +405,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.FUNNEL)
         plt.close(fig)
         return result
 
@@ -447,7 +447,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title, pad=20)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.GAUGE)
         plt.close(fig)
         return result
 
@@ -481,7 +481,7 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title, pad=20)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.RADAR)
         plt.close(fig)
         return result
 
@@ -523,10 +523,51 @@ class ChartGenerator:
         if config.title:
             ax.set_title(config.title)
         
-        result = ChartGenerator._save_chart(fig, config)
+        result = ChartGenerator._save_chart(fig, config, chart_data, ChartType.SANKEY)
         plt.close(fig)
         return result
 
+    @classmethod  
+    def run_with_factory(cls, chart_type: Union[str, ChartType], data: Union[List[Dict[str, Any]], pd.DataFrame], config: Optional[ChartConfig] = None, **kwargs) -> Union[str, bytes, io.BytesIO, Dict[str, Any]]:
+        """Factory-aware entry point for chart generation (Phase 3)"""
+        try:
+            from ..services.chart_generator_factory import get_chart_factory
+            
+            if config is None:
+                config = ChartConfig()
+            
+            # Build chart data
+            chart_data = ChartData(data=data)
+            for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field', 'name_field', 'time_field']:
+                if field in kwargs:
+                    setattr(chart_data, field, kwargs[field])
+            
+            # Use factory for generation
+            factory = get_chart_factory()
+            chart_type_str = chart_type.value if isinstance(chart_type, ChartType) else str(chart_type)
+            
+            result = factory.generate_chart(chart_type_str, chart_data, config, **kwargs)
+            
+            # Handle different result types
+            if isinstance(result, dict) and "content" in result:
+                return result
+            elif config.output_format == OutputFormat.MERMAID and isinstance(result, str):
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": result
+                        }
+                    ]
+                }
+            else:
+                return result
+                
+        except ImportError:
+            # Fallback to legacy implementation if factory is not available
+            _logger.warning("Factory not available, falling back to legacy implementation")
+            return cls.run(chart_type, data, config, **kwargs)
+    
     @classmethod
     def run(cls, chart_type: Union[str, ChartType], data: Union[List[Dict[str, Any]], pd.DataFrame], config: Optional[ChartConfig] = None, **kwargs) -> Union[str, bytes, io.BytesIO, Dict[str, Any]]:
         """Main entry point for chart generation"""
@@ -559,35 +600,45 @@ class ChartGenerator:
                 ]
             }
         
-        # Otherwise, proceed with matplotlib-based generation
+        # Phase 5: Use factory pattern instead of if/elif chain
         try:
-            if chart_type == ChartType.LINE:
-                return cls.generate_line_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['smooth', 'show_area', 'show_points', 'stack']})
-            elif chart_type == ChartType.BAR:
-                return cls.generate_bar_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['horizontal', 'stack', 'group']})
-            elif chart_type == ChartType.PIE:
-                return cls.generate_pie_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['inner_radius', 'explode_largest']})
-            elif chart_type == ChartType.AREA:
-                kwargs['show_area'] = True
-                return cls.generate_line_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['smooth', 'show_area', 'show_points', 'stack']})
-            elif chart_type == ChartType.SCATTER:
-                return cls.generate_scatter_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['size_by_field', 'alpha']})
-            elif chart_type == ChartType.HEATMAP:
-                return cls.generate_heatmap_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['colormap', 'annotate']})
-            elif chart_type == ChartType.BOXPLOT:
-                return cls.generate_boxplot_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['show_outliers']})
-            elif chart_type == ChartType.HISTOGRAM:
-                return cls.generate_histogram_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['bins', 'density']})
-            elif chart_type == ChartType.FUNNEL:
-                return cls.generate_funnel_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['sort_descending']})
-            elif chart_type == ChartType.GAUGE:
-                return cls.generate_gauge_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['min_value', 'max_value', 'show_value']})
-            elif chart_type == ChartType.RADAR:
-                return cls.generate_radar_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['fill_alpha']})
-            elif chart_type == ChartType.SANKEY:
-                return cls.generate_sankey_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['node_width']})
-            else:
-                raise ValueError(f"Unsupported chart type: {chart_type}")
+            # Try factory-aware implementation first
+            return cls.run_with_factory(chart_type, data, config, **kwargs)
+        except ImportError:
+            # Fallback to legacy if/elif chain for backward compatibility
+            _logger.warning("Factory pattern not available, using legacy dispatch")
+            return cls._legacy_chart_dispatch(chart_type, chart_data, config, **kwargs)
         except Exception as e:
             _logger.error(f"Error generating {chart_type.value} chart: {str(e)}")
             raise
+    
+    @classmethod
+    def _legacy_chart_dispatch(cls, chart_type: ChartType, chart_data: ChartData, config: ChartConfig, **kwargs):
+        """Legacy chart dispatch logic (Phase 5: Deprecated - use factory instead)"""
+        if chart_type == ChartType.LINE:
+            return cls.generate_line_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['smooth', 'show_area', 'show_points', 'stack']})
+        elif chart_type == ChartType.BAR:
+            return cls.generate_bar_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['horizontal', 'stack', 'group']})
+        elif chart_type == ChartType.PIE:
+            return cls.generate_pie_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['inner_radius', 'explode_largest']})
+        elif chart_type == ChartType.AREA:
+            kwargs['show_area'] = True
+            return cls.generate_line_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['smooth', 'show_area', 'show_points', 'stack']})
+        elif chart_type == ChartType.SCATTER:
+            return cls.generate_scatter_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['size_by_field', 'alpha']})
+        elif chart_type == ChartType.HEATMAP:
+            return cls.generate_heatmap_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['colormap', 'annotate']})
+        elif chart_type == ChartType.BOXPLOT:
+            return cls.generate_boxplot_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['show_outliers']})
+        elif chart_type == ChartType.HISTOGRAM:
+            return cls.generate_histogram_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['bins', 'density']})
+        elif chart_type == ChartType.FUNNEL:
+            return cls.generate_funnel_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['sort_descending']})
+        elif chart_type == ChartType.GAUGE:
+            return cls.generate_gauge_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['min_value', 'max_value', 'show_value']})
+        elif chart_type == ChartType.RADAR:
+            return cls.generate_radar_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['fill_alpha']})
+        elif chart_type == ChartType.SANKEY:
+            return cls.generate_sankey_chart(chart_data, config, **{k: v for k, v in kwargs.items() if k in ['node_width']})
+        else:
+            raise ValueError(f"Unsupported chart type: {chart_type}")

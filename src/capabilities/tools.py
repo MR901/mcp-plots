@@ -1,175 +1,245 @@
-from __future__ import annotations
+"""
+MCP Tools - Consolidated Implementation
+
+This module provides the MCP tools using the clean, refactored architecture.
+All legacy code and feature flags have been removed for clarity and maintainability.
+
+Architecture:
+- Uses ConfigurationService for thread-safe preference management
+- Uses ChartRenderingService for business logic orchestration  
+- Uses ChartGeneratorFactory for extensible chart generation
+- Uses custom exception hierarchy for specific error handling
+"""
 
 import logging
-import json
-import os
 from typing import Dict, List, Any, Optional
+
+from ..visualization.constants import ChartConstants
+from ..domain.models import ChartRequest, UserPreferences
+from ..services import get_config_service
+from ..services.chart_service import ChartRenderingService
 
 logger = logging.getLogger(__name__)
 
-# Global configuration storage
-_user_config = {
-    "defaults": {
-        "output_format": "mermaid",
-        "theme": "default", 
-        "chart_width": 800,
-        "chart_height": 600
-    },
-    "user_preferences": {}
-}
+# Global service instances (initialized on first use)
+_chart_service: Optional[ChartRenderingService] = None
 
-def _get_config_file_path() -> str:
-    """Get path for configuration file."""
-    return os.path.expanduser("~/.plots_mcp_config.json")
 
-def _load_user_config() -> None:
-    """Load user configuration from file."""
-    global _user_config
-    config_path = _get_config_file_path()
-    try:
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                saved_config = json.load(f)
-                _user_config["user_preferences"] = saved_config.get("user_preferences", {})
-                logger.info("User configuration loaded successfully")
-        else:
-            logger.info("No existing user configuration found, using defaults")
-    except Exception as e:
-        logger.warning(f"Failed to load user config: {e}, using defaults")
-
-def _save_user_config() -> None:
-    """Save user configuration to file."""
-    config_path = _get_config_file_path()
-    try:
-        with open(config_path, "w") as f:
-            json.dump(_user_config, f, indent=2)
-        logger.info("User configuration saved successfully")
-    except Exception as e:
-        logger.error(f"Failed to save user config: {e}")
-
-def _get_effective_config() -> Dict[str, Any]:
-    """Get effective configuration (defaults + user overrides)."""
-    effective = _user_config["defaults"].copy()
-    effective.update(_user_config["user_preferences"])
-    return effective
+def _get_chart_service() -> ChartRenderingService:
+    """Get or create chart rendering service."""
+    global _chart_service
+    if _chart_service is None:
+        config_service = get_config_service()
+        _chart_service = ChartRenderingService(config_service)
+    return _chart_service
 
 
 def _get_theme_description(theme: str) -> str:
     """Get description for a theme."""
     descriptions = {
         "default": "Clean, professional blue palette perfect for business presentations",
-        "dark": "Modern dark theme with bright colors, great for dashboards",
+        "dark": "Modern dark theme with bright colors, great for dashboards", 
         "seaborn": "Statistical visualization optimized with subtle colors",
         "minimal": "Understated grayscale palette for clean, simple charts"
     }
-    return descriptions.get(theme, "Custom color theme")
+    return descriptions.get(theme, "Unknown theme")
 
 
-def _get_help_info() -> Dict[str, Any]:
-    """Return comprehensive help information about available options."""
-    from src.visualization.chart_config import ChartType, Theme
+def _get_format_description(format_type: str) -> str:
+    """Get description for an output format."""
+    descriptions = {
+        "mermaid": "Text-based diagrams that render directly in Cursor - perfect for quick visualization",
+        "mcp_image": "High-quality PNG images with full color and styling - great for reports and presentations", 
+        "mcp_text": "Scalable SVG graphics with crisp text and vector precision - ideal for web and print"
+    }
+    return descriptions.get(format_type, "Unknown format")
+
+
+def _configure_preferences_impl(
+    output_format: str = None,
+    theme: str = None, 
+    chart_width: int = None,
+    chart_height: int = None,
+    reset_to_defaults: bool = False
+) -> Dict[str, Any]:
+    """
+    Interactive configuration tool for setting user preferences.
     
-    return {
-        "status": "success",
-        "help": {
-            "chart_types": [t.value for t in ChartType],
-            "themes": [t.value for t in Theme],
-            "output_formats": ["MERMAID", "MCP_IMAGE", "MCP_TEXT"],
-            "special_modes": {
-                "help": "Get this help information",
-                "suggest": "Analyze data and suggest field mappings"
-            },
-            "examples": {
-                "basic_chart": {
-                    "chart_type": "bar",
-                    "data": [{"category": "A", "value": 10}],
-                    "field_map": {"category_field": "category", "value_field": "value"}
-                },
-                "get_help": {
-                    "chart_type": "help"
-                },
-                "suggest_fields": {
-                    "chart_type": "suggest", 
-                    "data": [{"month": "Jan", "sales": 100, "region": "North"}]
-                }
+    Parameters:
+    - output_format: "mermaid", "mcp_image", or "mcp_text"
+    - theme: "default", "dark", "seaborn", "minimal", etc.
+    - chart_width: Chart width in pixels
+    - chart_height: Chart height in pixels  
+    - reset_to_defaults: Reset all preferences to system defaults
+    
+    If no parameters provided, shows current configuration with sample.
+    """
+    try:
+        config_service = get_config_service()
+        
+        if reset_to_defaults:
+            prefs = config_service.reset_to_defaults()
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"✅ **Configuration Reset**\n\nAll preferences reset to defaults:\n{_format_preferences(prefs.to_dict())}"
+                }]
             }
+        
+        # Validate inputs before updating
+        updates = {}
+        
+        if output_format is not None:
+            if ChartConstants.OutputFormats.validate(output_format):
+                updates["output_format"] = output_format
+            else:
+                valid_formats = ", ".join(ChartConstants.OutputFormats.all())
+                raise ValueError(f"Invalid output format '{output_format}'. Valid options: {valid_formats}")
+        
+        if theme is not None:
+            if ChartConstants.Themes.validate(theme):
+                updates["theme"] = theme
+            else:
+                valid_themes = ", ".join(ChartConstants.Themes.all())
+                raise ValueError(f"Invalid theme '{theme}'. Valid options: {valid_themes}")
+        
+        if chart_width is not None:
+            if chart_width < ChartConstants.ConfigDefaults.MIN_WIDTH or chart_width > ChartConstants.ConfigDefaults.MAX_WIDTH:
+                raise ValueError(f"Chart width must be between {ChartConstants.ConfigDefaults.MIN_WIDTH} and {ChartConstants.ConfigDefaults.MAX_WIDTH}")
+            updates["chart_width"] = chart_width
+        
+        if chart_height is not None:
+            if chart_height < ChartConstants.ConfigDefaults.MIN_HEIGHT or chart_height > ChartConstants.ConfigDefaults.MAX_HEIGHT:
+                raise ValueError(f"Chart height must be between {ChartConstants.ConfigDefaults.MIN_HEIGHT} and {ChartConstants.ConfigDefaults.MAX_HEIGHT}")
+            updates["chart_height"] = chart_height
+        
+        # Show current config if no updates
+        if not updates:
+            current_prefs = config_service.get_user_preferences()
+            return {
+                "content": [{
+                    "type": "text",
+                    "text": f"📊 **Current Configuration**\n\n{_format_preferences(current_prefs.to_dict())}\n\n{_get_config_guide()}"
+                }]
+            }
+        
+        # Update preferences
+        updated_prefs = config_service.update_preferences(**updates)
+        
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"✅ **Configuration Updated**\n\n{_format_preferences(updated_prefs.to_dict())}"
+            }]
         }
-    }
-
-
-def _suggest_field_mappings(data: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Analyze data and suggest field mappings."""
-    if not data:
-        return {"status": "error", "error": "Empty data provided"}
-    
-    # Simple heuristic: numeric -> candidates for y/value; non-numeric -> candidates for x/category
-    first = data[0]
-    numeric_fields: List[str] = []
-    text_fields: List[str] = []
-    date_fields: List[str] = []
-    
-    for key in first.keys():
-        values = [row.get(key) for row in data[:10]]
-        sample_values = [v for v in values if v is not None]
         
-        if not sample_values:
-            continue
-            
-        # Check if numeric
-        if any(isinstance(v, (int, float)) for v in sample_values):
-            numeric_fields.append(key)
-        # Check if looks like a date
-        elif any(isinstance(v, str) and _looks_like_date(v) for v in sample_values):
-            date_fields.append(key)
+    except Exception as e:
+        logger.error(f"configure_preferences failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+def _render_chart_impl(
+    chart_type: str,
+    data: List[Dict[str, Any]] = None,
+    field_map: Dict[str, str] = None,
+    config_overrides: Dict[str, Any] = None,
+    options: Dict[str, Any] = None,
+    output_format: str = None
+) -> Dict[str, Any]:
+    """
+    Render a chart from tabular data and return MCP-compatible content.
+    
+    Special modes:
+    - chart_type="help": Returns available chart types, themes, and field suggestions
+    - chart_type="suggest": Analyzes your data and suggests field mappings (requires data)
+
+    Parameters:
+    - chart_type: chart type ("line", "bar", "pie", etc.) or "help"/"suggest"
+    - data: list of objects (rows) - optional for help mode
+    - field_map: keys like x_field, y_field, category_field, value_field, group_field, size_field
+    - config_overrides: subset of ChartConfig as dict (width, height, title, theme, dpi, etc.)
+    - options: generator-specific options (e.g., smooth, stack)
+    - output_format: MCP_IMAGE (PNG), MCP_TEXT (SVG), or MERMAID
+    """
+    try:
+        # Create chart request from parameters
+        request = ChartRequest.from_tool_params(
+            chart_type=chart_type,
+            data=data,
+            field_map=field_map,
+            config_overrides=config_overrides,
+            options=options,
+            output_format=output_format
+        )
+        
+        # Use chart service
+        chart_service = _get_chart_service()
+        response = chart_service.render_chart(request)
+        
+        # Convert to MCP format
+        return response.to_mcp_format()
+        
+    except Exception as e:
+        logger.error(f"render_chart failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+def _format_preferences(prefs: Dict[str, Any]) -> str:
+    """Format preferences for display."""
+    formatted = []
+    for key, value in prefs.items():
+        # Add descriptions for better UX
+        if key == "theme":
+            desc = _get_theme_description(value)
+            formatted.append(f"- **{key.replace('_', ' ').title()}**: `{value}` - {desc}")
+        elif key == "output_format":
+            desc = _get_format_description(value)
+            formatted.append(f"- **{key.replace('_', ' ').title()}**: `{value}` - {desc}")
         else:
-            text_fields.append(key)
-    
-    suggestions = {
-        "x_candidates": text_fields + date_fields,
-        "y_candidates": numeric_fields,
-        "category_candidates": text_fields,
-        "value_candidates": numeric_fields,
-        "time_candidates": date_fields,
-        "recommended_charts": _recommend_chart_types(numeric_fields, text_fields, date_fields)
-    }
-    
-    return {"status": "success", "suggestions": suggestions}
+            formatted.append(f"- **{key.replace('_', ' ').title()}**: `{value}`")
+    return "\n".join(formatted)
 
 
-def _looks_like_date(value: str) -> bool:
-    """Simple heuristic to detect date-like strings."""
-    if not isinstance(value, str):
-        return False
-    date_indicators = ["jan", "feb", "mar", "apr", "may", "jun", 
-                      "jul", "aug", "sep", "oct", "nov", "dec",
-                      "2020", "2021", "2022", "2023", "2024", "2025",
-                      "-", "/", "q1", "q2", "q3", "q4"]
-    return any(indicator in value.lower() for indicator in date_indicators)
+def _get_config_guide() -> str:
+    """Get user-focused configuration guide."""
+    return f"""## 🎛️ **Available Options**
 
+### **Output Formats** (Where will you use your charts?)
+- **`{ChartConstants.OutputFormats.MERMAID}`** - Shows directly in Cursor (great for quick analysis)
+- **`{ChartConstants.OutputFormats.MCP_IMAGE}`** - High-quality images for presentations
+- **`{ChartConstants.OutputFormats.MCP_TEXT}`** - Scalable graphics for web and documents
 
-def _recommend_chart_types(numeric_fields: List[str], text_fields: List[str], date_fields: List[str]) -> List[str]:
-    """Recommend chart types based on field types."""
-    recommendations = []
-    
-    if date_fields and numeric_fields:
-        recommendations.extend(["line", "area"])
-    if text_fields and numeric_fields:
-        recommendations.extend(["bar", "pie"])
-    if len(numeric_fields) >= 2:
-        recommendations.extend(["scatter", "heatmap"])
-    if numeric_fields:
-        recommendations.extend(["histogram", "boxplot"])
-        
-    return recommendations or ["bar"]  # Default fallback
+### **Visual Styles**
+- **`{ChartConstants.Themes.DEFAULT}`** - {_get_theme_description('default')}
+- **`{ChartConstants.Themes.DARK}`** - {_get_theme_description('dark')}
+- **`{ChartConstants.Themes.SEABORN}`** - {_get_theme_description('seaborn')}
+- **`{ChartConstants.Themes.MINIMAL}`** - {_get_theme_description('minimal')}
+
+### **Chart Dimensions**
+- **Width**: {ChartConstants.ConfigDefaults.MIN_WIDTH}-{ChartConstants.ConfigDefaults.MAX_WIDTH} pixels (typical: 800-1200)
+- **Height**: {ChartConstants.ConfigDefaults.MIN_HEIGHT}-{ChartConstants.ConfigDefaults.MAX_HEIGHT} pixels (typical: 600-800)
+
+### **Quick Setup Examples**
+- **For exploring data**: Use `mermaid` format with `default` theme
+- **For presentations**: Use `mcp_image` format with larger size (1200x800)
+- **For modern dashboards**: Use `mcp_image` format with `dark` theme
+- **To start fresh**: Reset all settings to defaults
+
+**💡 Tip**: Mermaid format shows results instantly in Cursor - perfect for data exploration. Switch to image format when you need polished charts for presentations."""
 
 
 def register_tools(mcp_server, config: Dict[str, Any] = None):
-    """Register visualization tools into the MCP server."""
-
-    # Lazy import heavy deps to avoid import-time failures
-    from src.visualization.chart_config import ChartConfig, ChartType, OutputFormat, Theme
-    from src.visualization.generator import ChartGenerator
-
+    """
+    Register MCP tools with the server.
+    
+    This function registers the clean, service-based implementation of all tools.
+    All legacy code and feature flags have been removed.
+    
+    Args:
+        mcp_server: MCP server instance
+        config: Optional configuration dictionary (not used in current implementation)
+    """
+    
     @mcp_server.tool()
     def configure_preferences(
         output_format: str = None,
@@ -190,151 +260,14 @@ def register_tools(mcp_server, config: Dict[str, Any] = None):
         
         If no parameters provided, shows current configuration with sample.
         """
-        try:
-            # Load current user configuration
-            _load_user_config()
-            
-            # Handle reset to defaults
-            if reset_to_defaults:
-                _user_config["user_preferences"] = {}
-                _save_user_config()
-                return {
-                    "content": [{
-                        "type": "text",
-                        "text": "✅ **Configuration Reset**\n\nAll preferences have been reset to system defaults:\n" + 
-                               "\n".join([f"- **{k}**: `{v}`" for k, v in _user_config["defaults"].items()])
-                    }]
-                }
-            
-            # Update user preferences with provided values
-            config_changed = False
-            updates = {}
-            
-            if output_format is not None:
-                valid_formats = ["mermaid", "mcp_image", "mcp_text"]
-                format_lower = output_format.lower()
-                if format_lower in valid_formats:
-                    updates["output_format"] = format_lower
-                    config_changed = True
-                else:
-                    return {"status": "error", "error": f"Invalid output_format: {output_format}. Must be mermaid, mcp_image, or mcp_text"}
-            
-            if theme is not None:
-                valid_themes = [t.value for t in Theme]
-                if theme in valid_themes:
-                    updates["theme"] = theme
-                    config_changed = True
-                else:
-                    return {"status": "error", "error": f"Invalid theme: {theme}. Must be one of: {', '.join(valid_themes)}"}
-            
-            for param, value in [
-                ("chart_width", chart_width),
-                ("chart_height", chart_height)
-            ]:
-                if value is not None:
-                    updates[param] = value
-                    config_changed = True
-            
-            # Save configuration if changed
-            if config_changed:
-                _user_config["user_preferences"].update(updates)
-                _save_user_config()
-            
-            # Get effective configuration
-            effective_config = _get_effective_config()
-            
-            response_content = []
-            
-            # Show current configuration
-            config_text = "## 🎛️ **Current Configuration**\n\n"
-            if config_changed:
-                config_text += "✅ **Configuration Updated!**\n\n"
-            
-            config_text += "**Your Settings:**\n"
-            for key, value in effective_config.items():
-                source = "user" if key in _user_config["user_preferences"] else "default"
-                config_text += f"- **{key}**: `{value}` *({source})*\n"
-            
-            config_text += f"\n**Config file**: `{_get_config_file_path()}`\n"
-            
-            response_content.append({
-                "type": "text",
-                "text": config_text
-            })
-            
-            # Always show a sample with current settings
-            demo_data = [
-                {"category": "Sales", "value": 120},
-                {"category": "Marketing", "value": 80}, 
-                {"category": "Support", "value": 60}
-            ]
-            
-            # Show current format example
-            try:
-                current_format = effective_config["output_format"]
-                current_theme = effective_config["theme"]
-                
-                sample_cfg = ChartConfig(
-                    width=effective_config.get("chart_width", 400),
-                    height=effective_config.get("chart_height", 300),
-                    title=f"Sample ({current_format.upper()})",
-                    theme=Theme(current_theme),
-                    output_format=OutputFormat(current_format)
-                )
-                
-                result = ChartGenerator.run(
-                    "bar",
-                    data=demo_data,
-                    config=sample_cfg,
-                    category_field="category",
-                    value_field="value"
-                )
-                
-                if isinstance(result, dict) and "content" in result:
-                    response_content.append({
-                        "type": "text",
-                        "text": f"\n## 📊 **Sample Chart with Your Settings**"
-                    })
-                    response_content.append(result["content"][0])
-                    
-            except Exception as e:
-                logger.warning(f"Failed to generate sample: {e}")
-            
-            # Show simple configuration guide
-            guide_text = f"""
-## 🎛️ **Quick Configuration**
-
-```javascript
-// Set your preferred format and theme
-configure_preferences({{
-  output_format: "mermaid",  // "mermaid", "mcp_image", "mcp_text"
-  theme: "dark",               // "default", "dark", "seaborn", "minimal"
-  chart_width: 1000
-}})
-
-// Reset to defaults
-configure_preferences({{reset_to_defaults: true}})
-```
-
-### **💡 How It Works:**
-✅ **Set once, use everywhere** - Your preferences apply to all future charts  
-✅ **Persistent** - Settings saved to `{_get_config_file_path()}`  
-✅ **Override when needed** - Use `config_overrides` in `render_chart()` for one-off changes  
-
-**Try it**: Configure your preferences, then use `render_chart()` without specifying format/theme!
-            """
-            
-            response_content.append({
-                "type": "text", 
-                "text": guide_text
-            })
-            
-            return {"content": response_content}
-            
-        except Exception as e:
-            logger.error(f"configure_preferences failed: {e}")
-            return {"status": "error", "error": str(e)}
-
+        return _configure_preferences_impl(
+            output_format=output_format,
+            theme=theme,
+            chart_width=chart_width,
+            chart_height=chart_height,
+            reset_to_defaults=reset_to_defaults
+        )
+    
     @mcp_server.tool()
     def render_chart(
         chart_type: str,
@@ -359,148 +292,13 @@ configure_preferences({{reset_to_defaults: true}})
         - options: generator-specific options (e.g., smooth, stack)
         - output_format: MCP_IMAGE (PNG), MCP_TEXT (SVG), or MERMAID
         """
-        try:
-            # Handle special modes
-            if chart_type == "help":
-                return _get_help_info()
-            
-            if chart_type == "suggest":
-                if not data or not isinstance(data, list):
-                    return {"status": "error", "error": "data is required for field suggestions"}
-                return _suggest_field_mappings(data)
-            
-            # Regular chart rendering
-            if not isinstance(data, list) or not data:
-                return {"status": "error", "error": "data must be a non-empty list of objects"}
-
-            # Load user preferences
-            _load_user_config()
-            user_prefs = _get_effective_config()
-
-            field_map = field_map or {}
-            options = options or {}
-            config_overrides = config_overrides or {}
-
-            # Use user preference for output_format if not specified
-            if output_format is None:
-                output_format = user_prefs.get("output_format", "mermaid")
-
-            # Build config with user preferences as base
-            try:
-                fmt = OutputFormat(output_format.lower())
-            except Exception:
-                fmt = OutputFormat(user_prefs.get("output_format", "mermaid"))
-
-            # Filter config to only valid ChartConfig parameters
-            valid_config_params = {
-                "width", "height", "title", "x_title", "y_title", "theme", "colors",
-                "background_color", "grid_color", "text_color", "output_format",
-                "output_targets", "display_mode", "dpi", "show_grid", "show_legend"
-            }
-            
-            # Start with user preferences as base config
-            base_config = {}
-            
-            # Map user preference keys to ChartConfig parameter names
-            preference_mapping = {
-                "output_format": "output_format",
-                "theme": "theme", 
-                "chart_width": "width",
-                "chart_height": "height"
-            }
-            
-            for user_key, config_key in preference_mapping.items():
-                if user_key in user_prefs and config_key in valid_config_params:
-                    base_config[config_key] = user_prefs[user_key]
-            
-            # Apply user overrides on top of preferences
-            filtered_config = {k: v for k, v in config_overrides.items() if k in valid_config_params}
-            final_config = {**base_config, **filtered_config, "output_format": fmt}
-            
-            # Convert theme string to Theme enum if needed
-            if "theme" in final_config and isinstance(final_config["theme"], str):
-                try:
-                    from src.visualization.chart_config import Theme
-                    final_config["theme"] = Theme(final_config["theme"])
-                except ValueError:
-                    # If invalid theme string, use user preference or default
-                    final_config["theme"] = Theme(user_prefs.get("theme", "default"))
-            
-            cfg = ChartConfig(**final_config)
-
-            # Debug: print config attributes
-            logger.info(f"ChartConfig created with attributes: {[attr for attr in dir(cfg) if not attr.startswith('_')]}")
-            logger.info(f"show_grid attribute exists: {hasattr(cfg, 'show_grid')}")
-            logger.info(f"show_grid value: {getattr(cfg, 'show_grid', 'NOT_FOUND')}")
-
-            # Route to chart engine
-            usable_kwargs = {}
-            for key in [
-                "x_field", "y_field", "category_field", "value_field",
-                "group_field", "size_field", "source_field", "target_field", "name_field", "time_field"
-            ]:
-                if key in field_map:
-                    usable_kwargs[key] = field_map[key]
-
-            # Merge generator options
-            usable_kwargs.update(options)
-
-            result = ChartGenerator.run(
-                chart_type,
-                data=data,
-                config=cfg,
-                **usable_kwargs
-            )
-
-            # Normalize to MCP content
-            if isinstance(result, dict) and "content" in result:
-                return {"status": "success", **result}
-
-            if isinstance(result, (bytes, bytearray)):
-                import base64
-                b64 = base64.b64encode(result).decode("utf-8")
-                return {
-                    "status": "success",
-                    "content": [{"type": "image", "data": b64, "mimeType": "image/png"}],
-                }
-
-            if hasattr(result, "getvalue"):
-                import base64
-                result.seek(0)
-                b64 = base64.b64encode(result.getvalue()).decode("utf-8")
-                return {
-                    "status": "success",
-                    "content": [{"type": "image", "data": b64, "mimeType": "image/png"}],
-                }
-
-            if isinstance(result, str):
-                # Assume data URI or raw base64 string for image
-                if result.startswith("data:image"):
-                    try:
-                        b64 = result.split(",", 1)[1]
-                    except Exception:
-                        b64 = result
-                    return {
-                        "status": "success",
-                        "content": [{"type": "image", "data": b64, "mimeType": "image/png"}],
-                    }
-                elif result.strip().startswith(("xychart-beta", "pie title", "flowchart", "gantt")):
-                    # This looks like Mermaid syntax
-                    return {
-                        "status": "success",
-                        "content": [{"type": "text", "text": result}],
-                    }
-                else:
-                    # Treat as SVG or other textual output
-                    return {
-                        "status": "success",
-                        "content": [{"type": "text", "text": result}],
-                    }
-
-            return {"status": "error", "error": "Unsupported chart result type"}
-
-        except Exception as e:
-            logger.error(f"render_chart failed: {e}")
-            return {"status": "error", "error": str(e)}
-
-
+        return _render_chart_impl(
+            chart_type=chart_type,
+            data=data,
+            field_map=field_map,
+            config_overrides=config_overrides,
+            options=options,
+            output_format=output_format
+        )
+    
+    logger.info("MCP tools registered successfully with clean architecture")

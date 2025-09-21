@@ -75,3 +75,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Development test files (add back to git if they should be permanent)
+test_*.py
+demo_*.py
+*_test.py
+*_example.py
