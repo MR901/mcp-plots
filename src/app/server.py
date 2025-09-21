@@ -49,48 +49,35 @@ class MCPServer:
 
         self.mcp_server = None
         self.mcp_registered_tools = []
-        self.mcp_registered_static_resources = []
-        self.mcp_registered_template_resources = []
         self.mcp_registered_prompts = []
         self.capabilities_config = capabilities_config
 
     def _log_mcp_summary(self):
         # Extract names
         tools = [e.name for e in self.mcp_registered_tools]
-        static_resources = [e.name for e in self.mcp_registered_static_resources]
-        template_resources = [e for e in self.mcp_registered_template_resources]
         prompts = [e.name for e in self.mcp_registered_prompts]
 
         # Header with counts and optional colors
         if USE_COLORS:
             tools_header = f"{CYAN}Tools ({len(tools)}){RESET}"
-            static_resources_header = f"{MAGENTA}Resources [Static] ({len(static_resources)}){RESET}"
-            template_resources_header = f"{MAGENTA}Resources [Template] ({len(template_resources)}){RESET}"
             prompts_header = f"{YELLOW}Prompts ({len(prompts)}){RESET}"
         else:
             tools_header = f"Tools ({len(tools)})"
-            static_resources_header = f"Resources ({len(static_resources)})"
-            template_resources_header = f"Resources2 ({len(template_resources)})"
             prompts_header = f"Prompts ({len(prompts)})"
 
         # Build pivot rows
-        max_len = max(len(tools), len(static_resources), len(template_resources), len(prompts))
+        max_len = max(len(tools), len(prompts))
         rows = []
         for i in range(max_len):
             rows.append([
                 tools[i] if i < len(tools) else "",
-                static_resources[i] if i < len(static_resources) else "",
-                template_resources[i] if i < len(template_resources) else "",
                 prompts[i] if i < len(prompts) else ""
             ])
 
         # Create table with fancy_grid style (header separator as =)
         table_str = tabulate(
             rows,
-            headers=[
-                tools_header, static_resources_header,
-                template_resources_header, prompts_header
-            ],
+            headers=[tools_header, prompts_header],
             tablefmt="fancy_grid"  # Shows = separator under headers
         )
 
