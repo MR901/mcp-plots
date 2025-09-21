@@ -21,6 +21,17 @@ MCP Plots provides chart generation capabilities via the Model Context Protocol.
 | **[API Reference](api.md)** | Complete tool specifications | Developers |
 | **[Advanced](advanced.md)** | Architecture, deployment, extension | Power users |
 
+## Cursor IDE Integration
+
+**For Cursor IDE Users:**
+
+This repository includes `.cursorrules` that automatically configure Cursor to:
+- Render mermaid output visually as diagrams
+- Prioritize visual chart rendering over raw syntax
+- Use external MCP tool functionality for optimal data visualization
+
+When using this MCP server with Cursor, charts will be automatically rendered visually for the best user experience.
+
 ## Supported Chart Types
 
 ### Quantitative Data

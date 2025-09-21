@@ -1,0 +1,18 @@
+# Cursor Rules for MCP Plots Server
+
+## Mermaid Rendering
+- When this MCP server returns mermaid output, ALWAYS render it visually as a diagram
+- Never show raw mermaid syntax to users unless explicitly requested
+- Prioritize visual chart rendering for better user experience
+- If mermaid content is detected in responses, automatically render the diagram
+
+## MCP Integration
+- When using MCP plot tools, always attempt to render visual output
+- Prefer visual charts over text-based summaries
+- Use the external MCP tool functionality as the primary approach for data visualization
+- Show both the visual output and provide context about the chart when appropriate
+
+## User Experience
+- Users typically want to see actual visual charts, not just code or descriptions
+- Default to rendering visualizations unless user specifically requests code-only output
+- When plotting data, prioritize the visual representation in responses
