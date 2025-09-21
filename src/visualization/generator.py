@@ -14,6 +14,7 @@ from matplotlib.sankey import Sankey
 
 from .chart_config import ChartData, ChartConfig, ChartType, Theme, OutputFormat
 from .mermaid_generator import MermaidGenerator
+from .field_validator import FieldValidator, FieldValidationError
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -151,7 +152,9 @@ class ChartGenerator:
         df = ChartGenerator._prepare_data(chart_data)
         colors = ChartGenerator._get_colors(config.theme, config.colors)
         
-        if chart_data.group_field and chart_data.group_field in df.columns:
+        # Use FieldValidator to check optional fields safely
+        optional_fields = FieldValidator.validate_optional_fields(chart_data, 'group_field')
+        if optional_fields['group_field']:
             groups = df[chart_data.group_field].unique()
             bottom = None if not stack else np.zeros(len(df[chart_data.x_field].unique()))
             for i, group in enumerate(groups):
@@ -533,10 +536,16 @@ class ChartGenerator:
         if isinstance(chart_type, str):
             chart_type = ChartType(chart_type.lower())
         
+        # Validate data is not empty
+        FieldValidator.validate_data_not_empty(data)
+        
         chart_data = ChartData(data=data)
-        for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field']:
+        for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field', 'name_field', 'time_field']:
             if field in kwargs:
                 setattr(chart_data, field, kwargs[field])
+        
+        # Centralized field validation
+        FieldValidator.validate_chart_fields(chart_type, chart_data)
         
         # Check if MERMAID output is requested - generate directly
         if config.output_format == OutputFormat.MERMAID:

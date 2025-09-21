@@ -10,6 +10,7 @@ from typing import Dict, List, Any, Optional, Union
 import pandas as pd
 
 from .chart_config import ChartData, ChartConfig, ChartType
+from .field_validator import FieldValidator
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class MermaidGenerator:
         
         # Handle different field mappings
         if chart_data.x_field and chart_data.y_field:
-            # Line chart style
+            # Fields are already validated by FieldValidator
             x_values = df[chart_data.x_field].astype(str).tolist()
             y_values = df[chart_data.y_field].tolist()
             
@@ -73,7 +74,7 @@ class MermaidGenerator:
                 lines.append(f'    bar [{", ".join(map(str, y_values))}]')
                 
         elif chart_data.category_field and chart_data.value_field:
-            # Bar chart style
+            # Fields are already validated by FieldValidator
             categories = df[chart_data.category_field].astype(str).tolist()
             values = df[chart_data.value_field].tolist()
             
@@ -98,8 +99,7 @@ class MermaidGenerator:
         """Generate Mermaid Pie Chart"""
         df = MermaidGenerator._prepare_data(chart_data)
         
-        if not (chart_data.category_field and chart_data.value_field):
-            raise ValueError("Pie chart requires category_field and value_field")
+        # Fields are already validated by FieldValidator
         
         lines = []
         title = config.title or "Pie Chart"
@@ -182,7 +182,7 @@ class MermaidGenerator:
         """Generate histogram as bar chart in Mermaid"""
         df = MermaidGenerator._prepare_data(chart_data)
         
-        # Create bins for histogram
+        # Fields are already validated by FieldValidator
         values = df[chart_data.value_field]
         bins = 10  # Simple binning
         min_val, max_val = values.min(), values.max()
@@ -214,7 +214,7 @@ class MermaidGenerator:
         """Generate funnel chart using flowchart"""
         df = MermaidGenerator._prepare_data(chart_data)
         
-        # Sort by value descending for funnel effect
+        # Fields are already validated by FieldValidator
         df_sorted = df.sort_values(chart_data.value_field, ascending=False)
         
         title = config.title or "Funnel Chart"
@@ -268,6 +268,7 @@ class MermaidGenerator:
         """Generate gauge chart representation"""
         df = MermaidGenerator._prepare_data(chart_data)
         
+        # Fields are already validated by FieldValidator
         value = df[chart_data.value_field].iloc[0]  # Take first value
         title = config.title or "Gauge"
         
@@ -294,6 +295,8 @@ class MermaidGenerator:
         """Generate Sankey diagram using flowchart"""
         df = MermaidGenerator._prepare_data(chart_data)
         
+        # Fields are already validated by FieldValidator
+        
         title = config.title or "Flow Diagram"
         
         lines = [f'flowchart LR']
@@ -318,16 +321,19 @@ class MermaidGenerator:
         for _, row in df.iterrows():
             source = str(row[chart_data.source_field])
             target = str(row[chart_data.target_field])  
-            value = row[chart_data.value_field] if chart_data.value_field else 1
+            
+            # Handle value field safely
+            if chart_data.value_field and chart_data.value_field in df.columns:
+                value = row[chart_data.value_field]
+                # Use thick arrows for larger values
+                mean_value = df[chart_data.value_field].mean()
+                arrow = "==>" if value > mean_value else "-->"
+            else:
+                value = 1
+                arrow = "-->"
             
             source_id = f"S_{MermaidGenerator._sanitize_label(source).replace(' ', '_')}"
             target_id = f"T_{MermaidGenerator._sanitize_label(target).replace(' ', '_')}"
-            
-            # Use thick arrows for larger values
-            if value > df[chart_data.value_field].mean():
-                arrow = "==>"
-            else:
-                arrow = "-->"
             
             lines.append(f'    {source_id} {arrow} {target_id}')
             lines.append(f'    {source_id} -.->|{value}| {target_id}')

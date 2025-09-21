@@ -228,7 +228,7 @@ Add this to your Cursor MCP configuration file (`~/.cursor/mcp.json` or similar)
       "command": "uvx",
       "args": [
         "--from", 
-        "git+https://github.com/mr901/mcp-plots.git",
+        "git+https://github.com/mr901/mcp-plots.git@main",
         "mcp-plots",
         "--transport", 
         "stdio"
@@ -254,7 +254,7 @@ For HTTP-based integration:
       "command": "uvx",
       "args": [
         "--from", 
-        "git+https://github.com/mr901/mcp-plots.git", 
+        "git+https://github.com/mr901/mcp-plots.git@main", 
         "mcp-plots",
         "--transport", 
         "streamable-http",

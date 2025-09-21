@@ -400,17 +400,18 @@ configure_preferences({{reset_to_defaults: true}})
             
             # Start with user preferences as base config
             base_config = {}
-            for param in valid_config_params:
-                if param in user_prefs:
-                    # Map user preference keys to ChartConfig parameter names
-                    config_key = param
-                    if param == "chart_width":
-                        config_key = "width"
-                    elif param == "chart_height":
-                        config_key = "height"
-                    
-                    if config_key in valid_config_params:
-                        base_config[config_key] = user_prefs[param]
+            
+            # Map user preference keys to ChartConfig parameter names
+            preference_mapping = {
+                "output_format": "output_format",
+                "theme": "theme", 
+                "chart_width": "width",
+                "chart_height": "height"
+            }
+            
+            for user_key, config_key in preference_mapping.items():
+                if user_key in user_prefs and config_key in valid_config_params:
+                    base_config[config_key] = user_prefs[user_key]
             
             # Apply user overrides on top of preferences
             filtered_config = {k: v for k, v in config_overrides.items() if k in valid_config_params}
