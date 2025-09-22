@@ -1,0 +1,4 @@
+# Cursor Rules for MCP Plots Server
+
+- When this MCP server returns mermaid output, ALWAYS render it visually as a diagram
+- Prefer visual charts over raw syntax unless explicitly requested
