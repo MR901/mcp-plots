@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-plots"
-version = "0.0.0"
+version = "0.0.1"
 description = "MCP server for data visualization with Mermaid-first approach for Cursor and other MCP clients"
 readme = "README.md"
 requires-python = ">=3.10"

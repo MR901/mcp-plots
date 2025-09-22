@@ -2,6 +2,8 @@
 
 A lightweight Model Context Protocol (MCP) server for data visualization. It exposes tools to render charts (line, bar, pie, scatter, heatmap, etc.) from tabular data and returns MCP-compatible image/text content.
 
+<!-- mcp-name: io.github.MR901/plots-mcp -->
+
 ## 🚀 Quick Start
 
 ### 📦 PyPI Installation (Recommended)
