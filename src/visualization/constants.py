@@ -55,16 +55,17 @@ class ChartConstants:
         SIZE_FIELD = "size_field"
         SOURCE_FIELD = "source_field"
         TARGET_FIELD = "target_field"
-        NAME_FIELD = "name_field"
-        TIME_FIELD = "time_field"
+        # Future implementations:
+        # NAME_FIELD = "name_field"    # TODO: implement entity naming
+        # TIME_FIELD = "time_field"    # TODO: implement temporal data
         
         @classmethod
         def all(cls) -> Set[str]:
             """Get all valid field names"""
             return {
                 cls.X_FIELD, cls.Y_FIELD, cls.CATEGORY_FIELD, cls.VALUE_FIELD,
-                cls.GROUP_FIELD, cls.SIZE_FIELD, cls.SOURCE_FIELD, cls.TARGET_FIELD,
-                cls.NAME_FIELD, cls.TIME_FIELD
+                cls.GROUP_FIELD, cls.SIZE_FIELD, cls.SOURCE_FIELD, cls.TARGET_FIELD
+                # Future: cls.NAME_FIELD, cls.TIME_FIELD when implemented
             }
     
     class ConfigDefaults:

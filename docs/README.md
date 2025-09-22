@@ -62,7 +62,7 @@ When using this MCP server with Cursor, charts will be automatically rendered vi
 
 ## System Requirements
 
-- **Python**: 3.8+
+- **Python**: 3.10+
 - **MCP Client**: Cursor, Continue, or compatible
 - **Dependencies**: matplotlib, pandas, seaborn (auto-installed)
 

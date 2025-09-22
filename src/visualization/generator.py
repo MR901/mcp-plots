@@ -642,7 +642,7 @@ class ChartGenerator:
             
             # Build chart data
             chart_data = ChartData(data=data)
-            for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field', 'name_field', 'time_field']:
+            for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field']:
                 if field in kwargs:
                     setattr(chart_data, field, kwargs[field])
             
@@ -685,7 +685,7 @@ class ChartGenerator:
         FieldValidator.validate_data_not_empty(data)
         
         chart_data = ChartData(data=data)
-        for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field', 'name_field', 'time_field']:
+        for field in ['x_field', 'y_field', 'category_field', 'value_field', 'group_field', 'size_field', 'source_field', 'target_field']:
             if field in kwargs:
                 setattr(chart_data, field, kwargs[field])
         

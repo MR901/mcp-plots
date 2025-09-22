@@ -166,14 +166,11 @@ class OutputFormat(Enum):
     """
     PNG = "png"              # Static raster image
     SVG = "svg"              # Scalable vector graphics
-    PDF = "pdf"              # Portable document format
     BASE64 = "base64"        # Base64-encoded image data
     BUFFER = "buffer"        # In-memory buffer object
     MCP_IMAGE = "mcp_image"  # MCP protocol image format
     MCP_TEXT = "mcp_text"    # MCP protocol text format (SVG)
     MERMAID = "mermaid"      # Mermaid diagram syntax
-    HTML = "html"            # HTML with embedded chart
-    JSON = "json"            # Structured data format
 
 
 class DisplayMode(Enum):
@@ -182,13 +179,25 @@ class DisplayMode(Enum):
     
     Controls how charts are optimized and rendered based on
     the intended display environment and interaction model.
+    
+    Currently Implemented:
+        STATIC: Non-interactive static display (default behavior)
+    
+    Future Implementation (commented out):
+        - INTERACTIVE: Interactive charts with hover/zoom capabilities
+        - CHAT: Optimized rendering for chat interface contexts  
+        - HYBRID: Mixed static/interactive display modes
+        - API: Specialized optimization for API response contexts
+        - EMBEDDED: Embedded application integration modes
     """
-    STATIC = "static"           # Non-interactive static display
-    INTERACTIVE = "interactive" # Interactive with hover/zoom
-    CHAT = "chat"              # Optimized for chat interfaces
-    HYBRID = "hybrid"          # Mixed static/interactive
-    API = "api"               # API response optimization
-    EMBEDDED = "embedded"     # Embedded in other applications
+    STATIC = "static"           # Non-interactive static display (IMPLEMENTED)
+    
+    # Future implementations (placeholders for development roadmap):
+    # INTERACTIVE = "interactive" # Interactive with hover/zoom (TODO: implement)
+    # CHAT = "chat"              # Optimized for chat interfaces (TODO: implement)
+    # HYBRID = "hybrid"          # Mixed static/interactive (TODO: implement)
+    # API = "api"               # API response optimization (TODO: implement)
+    # EMBEDDED = "embedded"     # Embedded in other applications (TODO: implement)
 
 
 class OutputTarget(Enum):
@@ -197,14 +206,27 @@ class OutputTarget(Enum):
     
     Defines where and how generated charts should be delivered,
     affecting format choices and optimization strategies.
+    
+    Currently Implemented:
+        MEMORY: Keep chart data in application memory (default behavior)
+    
+    Future Implementation (commented out):
+        - FILE: Save charts directly to filesystem
+        - CHAT_INLINE: Optimized inline chat display integration
+        - API_RESPONSE: Specialized API response payload formatting
+        - POPUP_WINDOW: Display charts in popup window interface
+        - CLIPBOARD: Copy chart data to system clipboard
+        - EMAIL: Format charts for email attachment delivery
     """
-    MEMORY = "memory"              # Keep in application memory
-    FILE = "file"                  # Save to filesystem
-    CHAT_INLINE = "chat_inline"    # Inline chat display
-    API_RESPONSE = "api_response"  # API response payload
-    POPUP_WINDOW = "popup_window"  # Display in popup window
-    CLIPBOARD = "clipboard"        # Copy to system clipboard
-    EMAIL = "email"               # Email attachment
+    MEMORY = "memory"              # Keep in application memory (IMPLEMENTED)
+    
+    # Future implementations (placeholders for development roadmap):
+    # FILE = "file"                  # Save to filesystem (TODO: implement)
+    # CHAT_INLINE = "chat_inline"    # Inline chat display (TODO: implement)
+    # API_RESPONSE = "api_response"  # API response payload (TODO: implement)
+    # POPUP_WINDOW = "popup_window"  # Display in popup window (TODO: implement)
+    # CLIPBOARD = "clipboard"        # Copy to system clipboard (TODO: implement)
+    # EMAIL = "email"               # Email attachment (TODO: implement)
 
 
 @dataclass
@@ -218,18 +240,20 @@ class ChartData:
     
     Attributes:
         data: The actual data to visualize (DataFrame or list of dicts)
-        x_field: Column name for x-axis values
-        y_field: Column name for y-axis values  
-        category_field: Column name for categorical grouping
-        value_field: Column name for numeric values
-        group_field: Column name for series grouping
-        size_field: Column name for bubble/point sizes
-        source_field: Column name for flow source (Sankey charts)
-        target_field: Column name for flow target (Sankey charts)
-        name_field: Column name for entity names
-        time_field: Column name for temporal data
-        data_id: Unique identifier for this data instance
-        created_at: Timestamp when data was created
+        x_field: Column name for x-axis values (line, scatter, area charts)
+        y_field: Column name for y-axis values (line, scatter, area charts)
+        category_field: Column name for categorical grouping (bar, pie charts)
+        value_field: Column name for numeric values (bar, pie, histogram charts)
+        group_field: Column name for series grouping (multi-series charts)
+        size_field: Column name for bubble/point sizes (scatter plots)
+        source_field: Column name for flow source (Sankey flow diagrams)
+        target_field: Column name for flow target (Sankey flow diagrams)
+        data_id: Unique identifier for this data instance (metadata)
+        created_at: Timestamp when data was created (metadata)
+        
+    Future Implementation (commented out):
+        - name_field: Column name for entity names (TODO: implement)
+        - time_field: Column name for temporal data (TODO: implement)
     """
     data: Union[List[Dict[str, Any]], "pd.DataFrame"]
     x_field: Optional[str] = None
@@ -240,8 +264,10 @@ class ChartData:
     size_field: Optional[str] = None
     source_field: Optional[str] = None
     target_field: Optional[str] = None
-    name_field: Optional[str] = None
-    time_field: Optional[str] = None
+    
+    # Future implementations (placeholders for development roadmap):
+    # name_field: Optional[str] = None      # TODO: implement entity naming support
+    # time_field: Optional[str] = None      # TODO: implement temporal data support
     data_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -275,15 +301,19 @@ class ChartConfig:
         y_title: Y-axis label (optional)
         theme: Visual theme with predefined color palette
         colors: Custom color list (overrides theme colors if provided)
-        background_color: Chart background color (hex code)
-        grid_color: Grid line color (hex code)
-        text_color: Text and label color (hex code)
         output_format: Format for chart output (PNG, SVG, Mermaid, etc.)
-        output_targets: List of delivery targets for the chart
-        display_mode: Optimization mode for different contexts
         dpi: Resolution for raster outputs (1-1200, higher = better quality)
         show_grid: Whether to display background grid lines
         show_legend: Whether to display chart legend
+        
+    Limited Implementation (placeholders):
+        output_targets: List of delivery targets (currently only MEMORY supported)
+        display_mode: Optimization mode (currently only STATIC supported)
+        
+    Future Implementation (commented out):
+        - background_color: Chart background color customization (TODO: implement)
+        - grid_color: Grid line color customization (TODO: implement)
+        - text_color: Text and label color customization (TODO: implement)
     """
     width: int = 800
     height: int = 600
@@ -292,9 +322,12 @@ class ChartConfig:
     y_title: Optional[str] = None
     theme: Theme = Theme.DEFAULT
     colors: Optional[List[str]] = None
-    background_color: Optional[str] = None
-    grid_color: Optional[str] = None
-    text_color: Optional[str] = None
+    
+    # Future implementations (placeholders for development roadmap):
+    # background_color: Optional[str] = None   # TODO: implement custom background colors
+    # grid_color: Optional[str] = None         # TODO: implement custom grid colors  
+    # text_color: Optional[str] = None         # TODO: implement custom text colors
+    
     output_format: OutputFormat = OutputFormat.PNG
     output_targets: List[OutputTarget] = field(default_factory=lambda: [OutputTarget.MEMORY])
     display_mode: DisplayMode = DisplayMode.STATIC

@@ -269,7 +269,7 @@ MCPPlotsError (Base)
 3. **Plugin System**: Third-party chart type extensions
 
 ### Long-term
-1. **Interactive Charts**: HTML/JavaScript chart generation
+1. **Interactive Charts**: Advanced interactive visualization support
 2. **Real-time Updates**: WebSocket support for live data
 3. **Advanced Analytics**: Built-in statistical analysis tools
 

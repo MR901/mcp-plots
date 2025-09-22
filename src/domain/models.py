@@ -106,8 +106,9 @@ class FieldMapping:
     size_field: Optional[str] = None
     source_field: Optional[str] = None
     target_field: Optional[str] = None
-    name_field: Optional[str] = None
-    time_field: Optional[str] = None
+    # Future implementations:
+    # name_field: Optional[str] = None      # TODO: implement entity naming
+    # time_field: Optional[str] = None      # TODO: implement temporal data
     
     @classmethod
     def from_dict(cls, field_map: Dict[str, str]) -> 'FieldMapping':
@@ -120,9 +121,8 @@ class FieldMapping:
             group_field=field_map.get(ChartConstants.FieldNames.GROUP_FIELD),
             size_field=field_map.get(ChartConstants.FieldNames.SIZE_FIELD),
             source_field=field_map.get(ChartConstants.FieldNames.SOURCE_FIELD),
-            target_field=field_map.get(ChartConstants.FieldNames.TARGET_FIELD),
-            name_field=field_map.get(ChartConstants.FieldNames.NAME_FIELD),
-            time_field=field_map.get(ChartConstants.FieldNames.TIME_FIELD)
+            target_field=field_map.get(ChartConstants.FieldNames.TARGET_FIELD)
+            # Future: name_field, time_field will be added when implemented
         )
     
     def to_dict(self) -> Dict[str, str]:

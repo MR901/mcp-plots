@@ -5,7 +5,7 @@ Get MCP Plots running in your environment in under 5 minutes.
 ## Prerequisites
 
 - MCP-compatible client (Cursor, Continue, etc.)
-- Python 3.8+ with pip
+- Python 3.10+ with pip
 
 ## Installation
 

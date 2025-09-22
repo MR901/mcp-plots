@@ -148,7 +148,8 @@ class ChartRenderingService:
             # Filter to valid ChartConfig parameters
             valid_params = {
                 "width", "height", "title", "x_title", "y_title", "theme", "colors",
-                "background_color", "grid_color", "text_color", "output_format",
+                # Future: "background_color", "grid_color", "text_color" (TODO: implement)
+                "output_format",
                 "output_targets", "display_mode", "dpi", "show_grid", "show_legend"
             }
             
