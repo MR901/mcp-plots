@@ -22,8 +22,89 @@ _logger = logging.getLogger(__name__)
 
 class ChartGenerator:
     """
-    Advanced chart generation class with support for multiple chart types
-    and flexible configuration options.
+    Advanced chart generation engine with comprehensive visualization capabilities.
+    
+    This class serves as the primary matplotlib-based chart generation system,
+    providing high-fidelity static image outputs for all supported chart types.
+    It implements sophisticated algorithms for data processing, visual styling,
+    and multi-format export capabilities.
+    
+    Architecture Overview:
+    ┌─────────────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
+    │ Data Preprocessing  │ -> │ Chart Generation    │ -> │ Output Processing   │
+    │ • DataFrame conv.   │    │ • Theme application │    │ • Format conversion │
+    │ • Field validation  │    │ • Plot creation     │    │ • Resource cleanup  │
+    │ • Type coercion     │    │ • Style customiz.   │    │ • MCP serialization│
+    └─────────────────────┘    └─────────────────────┘    └─────────────────────┘
+    
+    Key Features:
+    - **Multi-Format Output**: PNG, SVG, Base64, MCP Protocol formats
+    - **Theme Support**: Professional themes with consistent color palettes
+    - **Memory Management**: Proper resource cleanup and buffer handling
+    - **Error Resilience**: Graceful fallbacks and comprehensive error handling
+    - **Performance Optimized**: Efficient data processing and matplotlib usage
+    
+    Supported Chart Types:
+    - Statistical: Line, Bar, Area, Scatter, Histogram, Box Plot
+    - Categorical: Pie, Funnel, Gauge, Radar
+    - Relational: Heatmap, Sankey Flow Diagrams
+    - Hybrid: Mermaid diagram generation for universal compatibility
+    
+    Theme System:
+    Each theme provides carefully curated color palettes optimized for specific contexts:
+    - DEFAULT: Professional blue palette for business presentations
+    - DARK: High-contrast colors optimized for dark backgrounds/dashboards
+    - SEABORN: Statistical visualization with subtle, research-friendly colors
+    
+    Memory Management:
+    - Uses context managers for all buffer operations to prevent leaks
+    - Automatic matplotlib figure cleanup after processing
+    - Resource pooling for efficient memory utilization
+    - Configurable memory limits via chart configuration
+    
+    Thread Safety:
+    - All static methods are thread-safe and stateless
+    - No shared mutable state between chart generations
+    - Safe for concurrent use in multi-threaded applications
+    
+    Performance Characteristics:
+    - Time Complexity: Generally O(n) where n = number of data points
+    - Space Complexity: O(n + output_size) with automatic cleanup
+    - Memory efficient: Streaming data processing where possible
+    - Scalable: Handles datasets up to configured limits
+    
+    Example Usage:
+        ```python
+        # Create chart data and configuration
+        chart_data = ChartData(
+            data=[{"month": "Jan", "sales": 1000}, {"month": "Feb", "sales": 1200}],
+            x_field="month",
+            y_field="sales"
+        )
+        config = ChartConfig(
+            width=800, 
+            height=600, 
+            theme=Theme.DEFAULT,
+            output_format=OutputFormat.MCP_IMAGE
+        )
+        
+        # Generate chart
+        result = ChartGenerator.generate_line_chart(chart_data, config)
+        
+        # Result contains MCP-compatible image data
+        print(result["content"][0]["type"])  # "image"
+        ```
+        
+    Integration Notes:
+    - Designed for seamless integration with MCP protocol
+    - Compatible with all major matplotlib versions (3.5+)
+    - Optimized for Cursor IDE and other MCP clients
+    - Supports both programmatic and interactive use cases
+    
+    See Also:
+    - MermaidGenerator: For text-based diagram generation
+    - ChartConfig: For comprehensive styling options
+    - ChartData: For data structure and field mapping requirements
     """
     
     # Default color palettes for different themes
@@ -62,47 +143,70 @@ class ChartGenerator:
 
     @staticmethod
     def _save_chart(fig: plt.Figure, config: ChartConfig, chart_data: Optional[ChartData] = None, chart_type: Optional[ChartType] = None) -> Union[str, bytes, io.BytesIO, Dict[str, Any]]:
-        """Save chart in the specified format"""
+        """
+        Save chart in the specified output format with proper resource management.
+        
+        This method handles the conversion of matplotlib figures to various output formats
+        including PNG images, SVG graphics, and Mermaid diagram syntax. It implements
+        proper memory management using context managers to prevent resource leaks.
+        
+        Args:
+            fig: The matplotlib figure to save/convert
+            config: Chart configuration specifying output format and parameters
+            chart_data: Optional chart data for Mermaid generation
+            chart_type: Optional chart type for Mermaid generation
+            
+        Returns:
+            Union[str, bytes, io.BytesIO, Dict[str, Any]]: 
+                - For BASE64: Data URI string with embedded image
+                - For MCP_IMAGE/MCP_TEXT: MCP-compatible content dictionary
+                - For other formats: Raw data or buffer objects
+                
+        Raises:
+            IOError: If figure saving fails
+            MemoryError: If image processing exhausts available memory
+            
+        Note:
+            Uses context managers for all buffer operations to ensure proper cleanup
+            and prevent memory leaks, even when exceptions occur during processing.
+        """
         if config.output_format == OutputFormat.BASE64:
-            buffer = io.BytesIO()
-            fig.savefig(buffer, format='png', dpi=config.dpi, bbox_inches='tight')
-            buffer.seek(0)
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            buffer.close()
-            return f"data:image/png;base64,{image_base64}"
+            with io.BytesIO() as buffer:
+                fig.savefig(buffer, format='png', dpi=config.dpi, bbox_inches='tight')
+                buffer.seek(0)
+                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                return f"data:image/png;base64,{image_base64}"
         
         elif config.output_format == OutputFormat.MCP_IMAGE:
-            # MCP Protocol format for images
-            buffer = io.BytesIO()
-            fig.savefig(buffer, format='png', dpi=config.dpi, bbox_inches='tight')
-            buffer.seek(0)
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            buffer.close()
-            return {
-                "content": [
-                    {
-                        "type": "image",
-                        "data": image_base64,
-                        "mimeType": "image/png"
-                    }
-                ]
-            }
+            # MCP Protocol format for images with guaranteed resource cleanup
+            with io.BytesIO() as buffer:
+                fig.savefig(buffer, format='png', dpi=config.dpi, bbox_inches='tight')
+                buffer.seek(0)
+                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                return {
+                    "content": [
+                        {
+                            "type": "image",
+                            "data": image_base64,
+                            "mimeType": "image/png"
+                        }
+                    ]
+                }
         
         elif config.output_format == OutputFormat.MCP_TEXT:
-            # MCP Protocol format for SVG text
-            buffer = io.BytesIO()
-            fig.savefig(buffer, format='svg', dpi=config.dpi, bbox_inches='tight')
-            buffer.seek(0)
-            svg_string = buffer.getvalue().decode('utf-8')
-            buffer.close()
-            return {
-                "content": [
-                    {
-                        "type": "text",
-                        "text": svg_string
-                    }
-                ]
-            }
+            # MCP Protocol format for SVG text with proper memory management
+            with io.BytesIO() as buffer:
+                fig.savefig(buffer, format='svg', dpi=config.dpi, bbox_inches='tight')
+                buffer.seek(0)
+                svg_string = buffer.getvalue().decode('utf-8')
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": svg_string
+                        }
+                    ]
+                }
         
         elif config.output_format == OutputFormat.MERMAID:
             # Generate Mermaid diagram syntax

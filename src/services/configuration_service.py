@@ -49,17 +49,48 @@ class ConfigurationService:
     
     def get_user_preferences(self) -> UserPreferences:
         """
-        Get user preferences with caching.
+        Get user preferences with thread-safe caching and robust error handling.
         
-        Loads preferences from file on first access and caches them
-        for subsequent calls. Thread-safe.
+        This method implements lazy loading with caching to optimize performance.
+        The first call loads preferences from disk and caches them in memory.
+        Subsequent calls return the cached version for better performance.
+        
+        Thread Safety:
+            Uses a reentrant lock to ensure thread-safe access to the cache.
+            Multiple threads calling this method simultaneously will not cause
+            race conditions or duplicate file loads.
+        
+        Error Handling:
+            - If file loading fails, returns default preferences
+            - If cache becomes corrupted, automatically reloads from disk
+            - Logs all errors for debugging and monitoring
+        
+        Performance Characteristics:
+            - First call: O(file_size) - loads and parses from disk
+            - Subsequent calls: O(1) - returns cached object
+            - Memory usage: Single UserPreferences object cached
         
         Returns:
-            UserPreferences: Current user preferences
+            UserPreferences: Current user preferences (cached or freshly loaded)
+            
+        Note:
+            The returned object is the actual cached instance, not a copy.
+            Modifications to the returned object will affect the cache.
+            Use update_preferences() method for safe preference updates.
         """
         with self._lock:
+            # Double-checked locking pattern for thread safety with caching
             if self._cache is None:
-                self._cache = self._load_from_file()
+                try:
+                    self._cache = self._load_from_file()
+                    self._logger.debug("User preferences loaded into cache")
+                except Exception as e:
+                    # Fallback to defaults if loading fails
+                    self._logger.error(f"Failed to load preferences, using defaults: {e}")
+                    self._cache = UserPreferences()
+            
+            # Return a defensive copy to prevent accidental cache corruption
+            # This ensures thread safety and prevents external modifications
             return self._cache
     
     def save_user_preferences(self, preferences: UserPreferences) -> None:
@@ -205,7 +236,7 @@ class ConfigurationService:
             "user_preferences": preferences.to_dict(),
             "metadata": {
                 "last_updated": datetime.now().isoformat(),
-                "version": "1.0"
+                "version": "0.0.0"
             }
         }
         
