@@ -7,8 +7,11 @@ startCommand:
   # JavaScript function that returns the command to start the MCP on stdio
   commandFunction: |-
     (config) => ({
-      command: "mcp-plots",
-      args: ["--transport", "stdio"],
+      command: "bash",
+      args: [
+        "-lc",
+        "python -m pip install -q --no-cache-dir mcp-plots==0.0.2 && mcp-plots --transport stdio"
+      ],
       env: {
         LOG_LEVEL: "INFO"
       }

@@ -58,6 +58,33 @@ uvx --from git+https://github.com/mr901/mcp-plots.git run-server.py
 
 **[Documentation →](docs/README.md)** | **[Quick Start →](docs/quickstart.md)** | **[API Reference →](docs/api.md)**
 
+## MCP Registry
+
+This server is published under the MCP registry identifier `io.github.MR901/mcp-plots`. You can discover/verify it via the official registry API:
+
+```bash
+curl "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.MR901/mcp-plots"
+```
+
+Registry metadata for this project is tracked in `server.json`.
+
+## Install with Smithery
+
+This repository includes a `smithery.yaml` for easy setup with Smithery.
+
+- File: `smithery.yaml`
+- Docs: https://smithery.ai/docs/config#smitheryyaml
+
+Example install using the Smithery CLI (adjust `--client` as needed, e.g. `cursor`, `claude`):
+
+```bash
+npx -y @smithery/cli install \
+  https://raw.githubusercontent.com/mr901/mcp-plots/main/smithery.yaml \
+  --client cursor
+```
+
+After installation, your MCP client should be able to start the server over stdio using the command defined in `smithery.yaml`.
+
 ## Project layout
 
 ```

@@ -23,12 +23,17 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Runtime env
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=${APP_DIR} \
+    LOG_LEVEL=INFO \
     MCP_TRANSPORT=streamable-http \
     MCP_HOST=0.0.0.0 \
-    MCP_PORT=8000 \
-    LOG_LEVEL=INFO
+    MCP_PORT=8000
+    # MCP_TRANSPORT=stdio
+    
 
 EXPOSE 8000
 
 # Run the MCP server (HTTP mode by default)
 CMD ["python", "-m", "src", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8000"]
+
+# Run the MCP server (STDIO mode by default for Smithery)
+# CMD ["mcp-plots", "--transport", "stdio"]

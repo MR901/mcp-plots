@@ -374,12 +374,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: |
-          python -m pip install --upgrade pip
-          pip install mcp-publisher
-      - run: mcp-publisher publish
-        env:
-          MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
+      - run: <TODO>
 ```
 
 References:
