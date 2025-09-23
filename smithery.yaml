@@ -1,3 +1,5 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
 startCommand:
   type: stdio
   # JSON Schema for any user-configurable options (empty = no config)
