@@ -1,6 +1,7 @@
 include README.md
 include pyproject.toml
 include run-server.py
+include LICENSE
 recursive-include src *.py
 recursive-include docs *.md *.json *.yml
 global-exclude __pycache__

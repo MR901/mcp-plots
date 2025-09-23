@@ -4,7 +4,7 @@
 
 The MCP Plots Server is a sophisticated data visualization system built on a clean, layered architecture following Domain-Driven Design (DDD) principles. This document provides comprehensive technical documentation for developers working with or extending the system.
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -49,7 +49,7 @@ The MCP Plots Server is a sophisticated data visualization system built on a cle
 └─────────────────┴─────────────────────┴─────────────────────────┘
 ```
 
-## 📦 Module Structure
+## Module Structure
 
 ### `/src/app/` - Server Foundation
 - **`server.py`**: FastMCP server wrapper and lifecycle management
@@ -75,7 +75,7 @@ The MCP Plots Server is a sophisticated data visualization system built on a cle
 - **`field_validator.py`**: Data validation and field mapping
 - **`constants.py`**: System constants and configuration defaults
 
-## 🔧 Key Design Patterns
+## Key Design Patterns
 
 ### 1. **Service Layer Pattern**
 Encapsulates business logic in dedicated service classes:
@@ -109,7 +109,7 @@ chart_service = ChartRenderingService(
 )
 ```
 
-## 🔍 Data Flow Architecture
+## Data Flow Architecture
 
 ### Request Processing Pipeline
 
@@ -141,7 +141,7 @@ chart_service = ChartRenderingService(
 └──────────────┘    └─────────────────────┘    └─────────────────────┘
 ```
 
-## 🛡️ Error Handling Strategy
+## Error Handling Strategy
 
 ### Custom Exception Hierarchy
 ```
@@ -169,7 +169,7 @@ MCPPlotsError (Base)
 3. **Error Propagation**: Structured error information for debugging
 4. **Logging**: Comprehensive logging at appropriate levels
 
-## 🔒 Thread Safety & Concurrency
+## Thread Safety & Concurrency
 
 ### Thread-Safe Components
 - **ConfigurationService**: Uses `threading.Lock()` for cache synchronization
@@ -181,7 +181,7 @@ MCPPlotsError (Base)
 - **Immutable Data**: Domain objects are designed to be immutable where possible
 - **Atomic Operations**: File operations use atomic write patterns
 
-## ⚡ Performance Optimization
+## Performance Optimization
 
 ### Memory Management
 - **Context Managers**: Automatic resource cleanup for buffers and files
@@ -198,7 +198,7 @@ MCPPlotsError (Base)
 - **Resource Limits**: Configurable limits on data size and processing time
 - **Async Support**: Architecture ready for async/await enhancement
 
-## 🔌 Extension Points
+## Extension Points
 
 ### Adding New Chart Types
 1. **Define ChartType Enum**: Add new type to `chart_config.py`
@@ -216,7 +216,7 @@ MCPPlotsError (Base)
 2. **Add Validation**: Implement input validation
 3. **Register Tool**: Use `@mcp_server.tool()` decorator
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### Test Categories (Planned)
 1. **Unit Tests**: Individual component testing
@@ -230,7 +230,7 @@ MCPPlotsError (Base)
 - **pytest-benchmark**: Performance benchmarking
 - **Factory Pattern**: Test data generation
 
-## 📊 Monitoring & Observability
+## Monitoring & Observability
 
 ### Logging Strategy
 - **Structured Logging**: JSON format for machine parsing
@@ -244,7 +244,7 @@ MCPPlotsError (Base)
 - **Performance Metrics**: Response times and resource usage
 - **User Analytics**: Popular chart types and configurations
 
-## 🚀 Deployment Architecture
+## Deployment Architecture
 
 ### Development
 - **Local Development**: Direct Python execution with file-based config
@@ -256,7 +256,7 @@ MCPPlotsError (Base)
 - **Monitoring**: Log aggregation and metrics collection
 - **Scaling**: Load balancer with multiple container instances
 
-## 🔄 Future Enhancements
+## Future Enhancements
 
 ### Short-term (Next Release)
 1. **Comprehensive Test Suite**: Unit and integration tests
@@ -275,7 +275,7 @@ MCPPlotsError (Base)
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - **[API Documentation](api.md)**: Complete tool specifications
 - **[Integration Guide](integration.md)**: MCP client setup

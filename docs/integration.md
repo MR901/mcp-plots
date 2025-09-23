@@ -2,9 +2,9 @@
 
 Complete guide for integrating MCP Plots with any MCP-compatible client.
 
-## Configuration Patterns
+## Setup Routes (Choose One)
 
-### Basic Configuration
+### 1) Cursor IDE (PyPI, simplest)
 ```json
 {
   "mcpServers": {
@@ -16,39 +16,37 @@ Complete guide for integrating MCP Plots with any MCP-compatible client.
 }
 ```
 
-### Production Configuration
+### 2) Cursor IDE (uvx, zero-install)
 ```json
 {
   "mcpServers": {
     "plots": {
-      "command": "mcp-plots",
-      "args": [
-        "--transport", "stdio",
-        "--log-level", "INFO"
-      ],
-      "env": {
-        "CHART_DEFAULT_WIDTH": "1000",
-        "CHART_DEFAULT_HEIGHT": "700",
-        "CHART_DEFAULT_DPI": "150"
-      }
+      "command": "uvx",
+      "args": ["mcp-plots", "--transport", "stdio"]
     }
   }
 }
 ```
 
-### Development Configuration
+### 3) Cursor IDE (latest from Git with uvx)
 ```json
 {
   "mcpServers": {
-    "plots-dev": {
+    "plots": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/mr901/mcp-plots.git@main", "mcp-plots", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+### 4) HTTP transport (any MCP client)
+```json
+{
+  "mcpServers": {
+    "plots": {
       "command": "mcp-plots",
-      "args": [
-        "--transport", "stdio",
-        "--log-level", "DEBUG"
-      ],
-      "env": {
-        "MCP_DEBUG": "true"
-      }
+      "args": ["--transport", "streamable-http", "--host", "127.0.0.1", "--port", "8000"]
     }
   }
 }
@@ -57,52 +55,16 @@ Complete guide for integrating MCP Plots with any MCP-compatible client.
 ## Client-Specific Setup
 
 ### Cursor IDE
-
-**Config location**: `~/.cursor/mcp.json` or `~/.config/cursor/mcp.json`
-
-**Recommended settings**:
-```json
-{
-  "mcpServers": {
-    "plots": {
-      "command": "mcp-plots",
-      "args": ["--transport", "stdio"]
-    }
-  }
-}
-```
-
-**Chart rendering**: Mermaid diagrams render automatically in chat interface.
+- Config file: `~/.cursor/mcp.json` (or `~/.config/cursor/mcp.json`)
+- Mermaid charts render visually in chat automatically
 
 ### Continue IDE
+- Config file: `~/.continue/config.json`
+- Add an entry under `mcpServers`
 
-**Config location**: `~/.continue/config.json`
+## Configuration Reference
 
-**Integration**: Add to existing `mcpServers` section or create new section.
-
-### Generic MCP Client
-
-**Transport options**:
-- `stdio` (recommended): Direct process communication
-- `streamable-http`: Network-based communication
-
-**HTTP mode setup**:
-```json
-{
-  "mcpServers": {
-    "plots": {
-      "command": "mcp-plots",
-      "args": [
-        "--transport", "streamable-http",
-        "--host", "127.0.0.1",
-        "--port", "8000"
-      ]
-    }
-  }
-}
-```
-
-## Environment Variables
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -115,26 +77,66 @@ Complete guide for integrating MCP Plots with any MCP-compatible client.
 | `CHART_DEFAULT_DPI` | `100` | Default image resolution |
 | `CHART_MAX_DATA_POINTS` | `10000` | Maximum data points per chart |
 
-## Command Line Options
+#### Examples
+
+Cursor config with environment overrides:
+```json
+{
+  "mcpServers": {
+    "plots": {
+      "command": "mcp-plots",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "LOG_LEVEL": "INFO",
+        "CHART_DEFAULT_WIDTH": "1000",
+        "CHART_DEFAULT_HEIGHT": "700",
+        "CHART_DEFAULT_DPI": "150"
+      }
+    }
+  }
+}
+```
+
+Shell exports (HTTP mode):
+```bash
+export MCP_TRANSPORT=streamable-http
+export MCP_HOST=127.0.0.1
+export MCP_PORT=8000
+export LOG_LEVEL=DEBUG
+export CHART_DEFAULT_WIDTH=1200
+export CHART_DEFAULT_HEIGHT=800
+export CHART_DEFAULT_DPI=150
+mcp-plots
+```
+
+Docker run with environment variables:
+```bash
+docker run --rm -p 8000:8000 \
+  -e MCP_TRANSPORT=streamable-http \
+  -e MCP_HOST=0.0.0.0 \
+  -e MCP_PORT=8000 \
+  -e LOG_LEVEL=INFO \
+  -e CHART_DEFAULT_WIDTH=1000 \
+  -e CHART_DEFAULT_HEIGHT=700 \
+  -e CHART_DEFAULT_DPI=150 \
+  mcp-plots
+```
+
+### Command Line Options
 
 ```bash
 mcp-plots [options]
 ```
 
-**Transport options**:
-- `--transport {stdio,streamable-http}` - Communication method
-- `--host HOST` - HTTP bind address (HTTP mode only)
-- `--port PORT` - HTTP listen port (HTTP mode only)
-
-**Chart defaults**:
-- `--chart-width WIDTH` - Default chart width
-- `--chart-height HEIGHT` - Default chart height  
-- `--chart-dpi DPI` - Default image resolution
-
-**System options**:
-- `--log-level LEVEL` - Logging verbosity
-- `--debug` - Enable debug mode
-- `--max-data-points N` - Data point limit
+- `--transport {stdio,streamable-http}`
+- `--host HOST` (HTTP mode)
+- `--port PORT` (HTTP mode)
+- `--chart-width WIDTH`
+- `--chart-height HEIGHT`
+- `--chart-dpi DPI`
+- `--log-level LEVEL`
+- `--debug`
+- `--max-data-points N`
 
 ## Data Input Formats
 
@@ -200,106 +202,45 @@ mcp-plots [options]
 }
 ```
 
-## Performance Optimization
+## Performance & Security
 
-### Large Datasets
-```json
-{
-  "env": {
-    "CHART_MAX_DATA_POINTS": "50000"
-  }
-}
-```
+### Performance
+- Mermaid: <100ms (recommended for iterative workflows)
+- PNG generation: 200–500ms
+- SVG generation: 100–300ms
+- Memory: ~50MB baseline, +5–10MB per active chart
 
-### Memory Management
-- **Baseline usage**: ~50MB
-- **Per chart session**: +5-10MB  
-- **Large datasets**: +1MB per 10K data points
-
-### Rendering Performance
-- **Mermaid**: <100ms (recommended)
-- **PNG generation**: 200-500ms
-- **SVG generation**: 100-300ms
-
-## Security Considerations
-
-### Network Mode
+### Security
 - HTTP server binds to localhost by default
-- No authentication mechanism (design for localhost use)
-- Consider firewall rules for multi-user environments
+- No data persistence; memory-only processing
+- No outbound network requests
 
-### Data Handling
-- No data persistence (memory-only processing)
-- No external network requests
-- Temporary files cleaned automatically
+## Troubleshooting
 
-## Error Handling
-
-### Common Issues
-
-**Connection failures**:
-```bash
-# Test server manually
-mcp-plots --transport stdio --log-level DEBUG
-```
-
-**Invalid data format**:
-- Server returns structured error messages
-- Check field mappings match your data structure
-
-**Memory issues**:
-- Reduce `CHART_MAX_DATA_POINTS`
-- Use data sampling for large datasets
-
-### Debugging
-
-**Enable debug logging**:
-```json
-{
-  "env": {
-    "LOG_LEVEL": "DEBUG",
-    "MCP_DEBUG": "true"
-  }
-}
-```
-
-**Test configuration**:
 ```bash
 # Validate JSON syntax
 cat ~/.cursor/mcp.json | python -m json.tool
 
 # Test server startup
 mcp-plots --help
+
+# Debug logging
+mcp-plots --transport stdio --log-level DEBUG
 ```
 
 ## Integration Testing
 
-### Automated Tests
-```bash
-# Install with dev dependencies
-pip install mcp-plots[dev]
-
-# Run integration tests
-python -m pytest tests/integration/
-```
-
-### Manual Verification
 ```javascript
-// Test basic functionality
-render_chart({
-  chart_type: "help"
-})
+// Basic functionality
+render_chart({ chart_type: "help" })
 
-// Test data processing  
-render_chart({
-  chart_type: "suggest",
-  data: [{"x": 1, "y": 2}, {"x": 2, "y": 4}]
-})
+// Data analysis
+render_chart({ chart_type: "suggest", data: [{"x": 1, "y": 2}] })
 
-// Test chart generation
+// Chart generation
 render_chart({
   chart_type: "bar",
   data: [{"category": "A", "value": 10}],
-  field_map: {"category_field": "category", "value_field": "value"}
+  field_map: { category_field: "category", value_field: "value" }
 })
 ```
