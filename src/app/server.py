@@ -208,6 +208,9 @@ class MCPServer:
         appropriate instructions, and registers all available tools and prompts.
         Logs detailed startup information for debugging.
         
+        Returns:
+            FastMCP: The configured FastMCP server instance
+        
         Raises:
             Exception: If Python version requirements are not met or server setup fails
         """
@@ -249,6 +252,9 @@ class MCPServer:
         finally:
             # Always show capability summary, even if some registrations failed
             self._log_mcp_summary()
+        
+        # Return the configured FastMCP server instance
+        return self.mcp_server
 
     def run(self):
         """
@@ -265,38 +271,4 @@ class MCPServer:
         # Start the server - this blocks until interrupted
         self.mcp_server.run(transport=self.transport_route)
         logger.info("Server stopped.")
-
-
-def create_server(config: Dict[str, Any] | None = None) -> MCPServer:
-    """
-    Factory function to create a configured MCPServer instance.
-    
-    Provides a convenient way to create an MCP server with sensible defaults
-    while allowing full configuration override via the config dictionary.
-    
-    Args:
-        config: Configuration dictionary with server settings. Supported keys:
-            - transport: Transport type ("streamable-http" or "stdio")
-            - stateless_http: Use stateless HTTP mode (bool)
-            - host: Host address for HTTP transport (str)
-            - port: Port number for HTTP transport (int)
-            - log_level: Logging level (str)
-            - debug: Enable debug mode (bool)
-            - capabilities: Configuration for chart generation capabilities (dict)
-            
-    Returns:
-        MCPServer: Configured server instance ready for setup and launch
-    """
-    cfg = config or {}
-    return MCPServer(
-        transport_route=cfg.get("transport", "streamable-http"),
-        stateless_http=cfg.get("stateless_http", True),
-        host=cfg.get("host", "0.0.0.0"),
-        port=cfg.get("port", 8000),
-        log_level=cfg.get("log_level", "INFO"),
-        debug=cfg.get("debug", False),
-        capabilities_config=cfg.get("capabilities")
-    )
-
-
 

@@ -1,20 +1,3 @@
-# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
-
-startCommand:
-  type: stdio
-  # JSON Schema for any user-configurable options (empty = no config)
-  configSchema: {}
-  # JavaScript function that returns the command to start the MCP on stdio
-  commandFunction: |-
-    (config) => ({
-      command: "bash",
-      args: [
-        "-lc",
-        "python -m pip install -q --no-cache-dir mcp-plots==0.0.2 && mcp-plots --transport stdio"
-      ],
-      env: {
-        LOG_LEVEL: "INFO"
-      }
-    })
+runtime: "python"
 
 

@@ -62,6 +62,9 @@ dev = [
 [project.scripts]
 mcp-plots = "src.__main__:main"
 
+[tool.smithery]
+server = "src.__main__:create_mcp_server"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 

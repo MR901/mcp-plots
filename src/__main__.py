@@ -31,7 +31,7 @@ import sys
 from typing import Dict, Any
 from dataclasses import dataclass
 
-from src.app.server import create_server
+from src.app.server import MCPServer
 
 
 @dataclass
@@ -196,9 +196,65 @@ def _configure_logging(level: str):
     )
 
 
+def create_mcp_server():
+    """
+    Create and configure a FastMCP server instance for smithery integration.
+    
+    This function creates a configured MCP server instance with default settings
+    suitable for smithery deployment. It sets up the server with stdio transport
+    and registers all chart generation capabilities.
+    
+    Returns:
+        FastMCP: Configured FastMCP server instance ready to run
+    """
+    try:
+        # Use default configuration optimized for smithery/MCP client integration
+        config = ServerConfig(
+            transport="stdio",  # Smithery typically uses stdio
+            log_level="INFO",
+            debug=False
+        )
+        
+        # Configure logging
+        _configure_logging(config.log_level)
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Creating MCP server for smithery integration...")
+        
+        # Create server with smithery-optimized settings
+        server = MCPServer(
+            transport_route=config.transport,
+            stateless_http=config.stateless_http,
+            host=config.host,
+            port=config.port,
+            log_level=config.log_level,
+            debug=config.debug,
+            capabilities_config={
+                "chart_defaults": {
+                    "width": config.default_chart_width,
+                    "height": config.default_chart_height,
+                    "dpi": config.default_dpi,
+                    "max_data_points": config.max_data_points
+                }
+            }
+        )
+        
+        # Setup and return the FastMCP server instance
+        return server.setup_mcp_server_and_capabilities()
+        
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.critical(f"Failed to create MCP server: {e}", exc_info=True)
+        raise
+
+
 def main():
     """
     Main entry point for the MCP server.
+    
+    Supports both direct execution and smithery integration:
+    - When called directly: Starts the server with full lifecycle management
+    - When imported by smithery: Can be used to create server instances
     
     Orchestrates the complete server lifecycle:
     1. Load configuration from environment variables and CLI arguments
@@ -224,14 +280,14 @@ def main():
         logger.info(f"Configuration: {config.to_dict()}")
         
         # Create and configure server with resolved settings
-        server = create_server({
-            "transport": config.transport,
-            "stateless_http": config.stateless_http,
-            "host": config.host,
-            "port": config.port,
-            "log_level": config.log_level,
-            "debug": config.debug,
-            "capabilities": {
+        server = MCPServer(
+            transport_route=config.transport,
+            stateless_http=config.stateless_http,
+            host=config.host,
+            port=config.port,
+            log_level=config.log_level,
+            debug=config.debug,
+            capabilities_config={
                 "chart_defaults": {
                     "width": config.default_chart_width,
                     "height": config.default_chart_height,
@@ -239,10 +295,10 @@ def main():
                     "max_data_points": config.max_data_points
                 }
             }
-        })
+        )
         
         # Initialize MCP capabilities (tools, prompts, resources)
-        server.setup_mcp_server_and_capabilities()
+        mcp_server_instance = server.setup_mcp_server_and_capabilities()
         
         # Start the server - this blocks until interrupted
         server.run()
