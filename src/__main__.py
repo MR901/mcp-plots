@@ -30,6 +30,7 @@ import os
 import sys
 from typing import Dict, Any
 from dataclasses import dataclass
+from smithery.decorators import smithery
 
 from src.app.server import MCPServer
 
