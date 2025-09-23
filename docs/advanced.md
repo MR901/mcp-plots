@@ -347,6 +347,46 @@ pip install --index-url https://test.pypi.org/simple/ mcp-plots
 twine upload dist/*
 ```
 
+### MCP Registry Publishing (mcp-publisher)
+Use the MCP Registry publisher to register or update this server in the MCP Registry using the `server.json` in the repo root.
+
+Prerequisites:
+- Ensure `server.json` is valid and the version matches `pyproject.toml`.
+
+Publish to MCP Registry:
+```bash
+# mcp-publisher init
+mcp-publisher login github
+mcp-publisher publish
+```
+
+Optional: Minimal GitHub Actions workflow
+```yaml
+name: MCP Publish
+on:
+  push:
+    tags: ['v*.*.*']
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install mcp-publisher
+      - run: mcp-publisher publish
+        env:
+          MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
+```
+
+References:
+- MCP Registry publishing guide: https://github.com/modelcontextprotocol/registry/blob/main/docs/guides/publishing/github-actions.md
+- Publish a server guide: https://github.com/modelcontextprotocol/registry/blob/main/docs/guides/publishing/publish-server.md
+- Example repository workflows: https://github.com/upstash/context7/tree/master/.github
+
 ### Version Management
 ```python
 # Semantic versioning in pyproject.toml
