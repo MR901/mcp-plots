@@ -18,13 +18,13 @@ Verify installation:
 mcp-plots --version
 ```
 
-## MCP Client Configuration
+## MCP Client Configuration (Choose a route)
 
 ### Cursor IDE
 
 1. **Locate config file**: `~/.cursor/mcp.json` (create if missing)
 
-2. **Add server configuration**:
+2. **Route A — PyPI** (simple):
 ```json
 {
   "mcpServers": {
@@ -36,7 +36,31 @@ mcp-plots --version
 }
 ```
 
-3. **Restart Cursor**
+3. **Route B — uvx (zero-install)**:
+```json
+{
+  "mcpServers": {
+    "plots": {
+      "command": "uvx",
+      "args": ["mcp-plots", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+4. **Route C — Latest from Git (uvx)**:
+```json
+{
+  "mcpServers": {
+    "plots": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/mr901/mcp-plots.git@main", "mcp-plots", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+5. **Restart Cursor**
 
 ### Continue IDE
 

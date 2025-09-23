@@ -2,6 +2,13 @@
 
 **Professional data visualization server for Model Context Protocol (MCP) clients**
 
+## Why MCP Plots?
+
+- Visual-first: Mermaid output renders instantly in MCP clients like Cursor
+- Simple prompts → charts from plain data, fast iteration
+- Multiple setup routes: PyPI, uvx (zero-install), Docker
+- Flexible formats: mermaid (default), PNG image, text
+
 ## Overview
 
 MCP Plots provides chart generation capabilities via the Model Context Protocol. It renders interactive Mermaid diagrams and static images from structured data using natural language prompts.
@@ -20,6 +27,15 @@ MCP Plots provides chart generation capabilities via the Model Context Protocol.
 | **[Integration](integration.md)** | MCP client setup and configuration | Integrators |
 | **[API Reference](api.md)** | Complete tool specifications | Developers |
 | **[Advanced](advanced.md)** | Architecture, deployment, extension | Power users |
+
+## Quick Usage
+
+Ask in your MCP client:
+```
+Create a bar chart showing sales: A=100, B=150, C=80
+```
+
+Result renders as a Mermaid diagram by default.
 
 ## Cursor IDE Integration
 

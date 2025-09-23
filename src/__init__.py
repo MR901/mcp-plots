@@ -24,6 +24,6 @@ Usage:
     mcp-plots
 """
 
-__version__ = "0.0.0"
+__version__ = "0.0.2"
 __author__ = "MCP Plots Team"
 __description__ = "MCP server for data visualization with Mermaid-first approach"

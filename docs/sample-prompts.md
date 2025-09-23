@@ -2,13 +2,13 @@
 
 This document provides ready-to-use prompts that you can copy and paste to test the mcp-plots functionality in your MCP-enabled environment (like Cursor).
 
-## 🚀 Getting Started
+## Getting Started
 
 Simply copy any prompt below and paste it into your chat interface. The mcp-plots tool will automatically generate the appropriate chart using Mermaid syntax.
 
 ---
 
-## 📊 Pie Charts
+## Pie Charts
 
 ### Basic Expense Breakdown
 ```
@@ -42,7 +42,7 @@ Create a pie chart showing smartphone market share:
 
 ---
 
-## 📈 Bar Charts
+## Bar Charts
 
 ### Simple Sales Performance
 ```
@@ -83,7 +83,7 @@ Product C: North 80, South 90, East 200, West 110
 
 ---
 
-## 📉 Line Charts
+## Line Charts
 
 ### Website Traffic Growth
 ```
@@ -133,7 +133,7 @@ Week 8: $51.40
 
 ---
 
-## 🎯 Business Scenarios
+## Business Scenarios
 
 ### Customer Satisfaction
 ```
@@ -168,7 +168,7 @@ Q2 2024: $4.9M
 
 ---
 
-## 🏠 Personal Finance
+## Personal Finance
 
 ### Investment Portfolio
 ```
@@ -204,7 +204,7 @@ Target: $4,000
 
 ---
 
-## 📚 Educational Examples
+## Educational Examples
 
 ### Student Grade Distribution
 ```
@@ -239,7 +239,7 @@ Test 6: 92%
 
 ---
 
-## 🔧 Technical Examples
+## Technical Examples
 
 ### System Resource Usage
 ```
@@ -273,7 +273,7 @@ Line chart of API response times over 24 hours:
 
 ---
 
-## 💡 Tips for Custom Prompts
+## Tips for Custom Prompts
 
 ### Structure Your Data Clearly
 - Use consistent formatting for your data points
@@ -305,7 +305,7 @@ You can also specify:
 
 ---
 
-## 🚀 Try Your Own
+## Try Your Own
 
 Now that you've seen these examples, try creating your own prompts! The tool works best when you:
 
@@ -314,4 +314,4 @@ Now that you've seen these examples, try creating your own prompts! The tool wor
 3. **Use descriptive labels**
 4. **Keep data sets reasonably sized** (5-15 data points work best)
 
-Have fun exploring different visualizations with your own data! 📊
+Have fun exploring different visualizations with your own data!

@@ -2,17 +2,29 @@
 
 A lightweight Model Context Protocol (MCP) server for data visualization. It exposes tools to render charts (line, bar, pie, scatter, heatmap, etc.) from tabular data and returns MCP-compatible image/text content.
 
-<!-- mcp-name: io.github.MR901/plots-mcp -->
+<!-- mcp-name: io.github.MR901/mcp-plots -->
 
-## 🚀 Quick Start
+## Why MCP Plots?
 
-### 📦 PyPI Installation (Recommended)
+- Instant, visual-first charts using Mermaid (renders directly in MCP clients like Cursor)
+- Simple prompts to generate charts from plain data
+- Zero-setup options via uvx, or install from PyPI/Docker
+- Flexible output formats: mermaid (default), PNG image, or text
+
+## Quick Usage
+
+- Ask your MCP client: "Create a bar chart showing sales: A=100, B=150, C=80"
+- Default output is Mermaid, so diagrams render instantly in Cursor
+
+## Quick Start
+
+### PyPI Installation (Recommended)
 ```bash
 pip install mcp-plots
 mcp-plots  # Start the server
 ```
 
-### 🎯 For Cursor Users
+### For Cursor Users
 1. Install the package: `pip install mcp-plots`
 2. Add to your Cursor MCP config (`~/.cursor/mcp.json`):
    ```json
@@ -25,15 +37,26 @@ mcp-plots  # Start the server
      }
    }
    ```
+   Alternative (zero-install via uvx + PyPI):
+   ```json
+   {
+     "mcpServers": {
+       "plots": {
+         "command": "uvx",
+         "args": ["mcp-plots", "--transport", "stdio"]
+       }
+     }
+   }
+   ```
 3. Restart Cursor
 4. Ask: *"Create a bar chart showing sales: A=100, B=150, C=80"*
 
-### 🛠️ Development Installation
+### Development Installation
 ```bash
 uvx --from git+https://github.com/mr901/mcp-plots.git run-server.py
 ```
 
-📖 **[Documentation →](docs/README.md)** | **[Quick Start →](docs/quickstart.md)** | **[API Reference →](docs/api.md)**
+**[Documentation →](docs/README.md)** | **[Quick Start →](docs/quickstart.md)** | **[API Reference →](docs/api.md)**
 
 ## Project layout
 
@@ -54,9 +77,9 @@ src/
 - Python 3.10+
 - See `requirements.txt`
 
-## Installation & Usage
+## Setup Routes
 
-### 🚀 Quick Start with uvx (Recommended)
+### uvx (Recommended)
 
 The easiest way to run the MCP server without managing Python environments:
 
@@ -72,13 +95,13 @@ uvx --from git+https://github.com/mr901/mcp-plots.git mcp-plots --port 8080 --lo
 ```
 
 **Why uvx?**
-- ✅ **No Environment Management**: Automatically handles Python dependencies
-- ✅ **Isolated Execution**: Runs in its own virtual environment
-- ✅ **Always Latest**: Pulls fresh code from repository
-- ✅ **Zero Setup**: Works immediately without pip install
-- ✅ **Cross-Platform**: Same command works on Windows, macOS, Linux
+- **No Environment Management**: Automatically handles Python dependencies
+- **Isolated Execution**: Runs in its own virtual environment
+- **Always Latest**: Pulls fresh code from repository
+- **Zero Setup**: Works immediately without pip install
+- **Cross-Platform**: Same command works on Windows, macOS, Linux
 
-### 📦 Traditional Installation
+### PyPI (Traditional Installation)
 
 1) **Install dependencies**
 ```bash
@@ -95,7 +118,15 @@ python -m src --transport streamable-http --host 0.0.0.0 --port 8000 --log-level
 python -m src --transport stdio
 ```
 
-### 🐳 Docker
+### Local Development (from source)
+```bash
+git clone https://github.com/mr901/mcp-plots.git
+cd mcp-plots
+pip install -e .
+python -m src --transport stdio --log-level DEBUG
+```
+
+### Docker
 
 ```bash
 docker build -t mcp-plots .
@@ -116,7 +147,7 @@ Environment variables (optional):
 - `render_chart(chart_type, data, field_map, config_overrides?, options?, output_format?)` → returns MCP content
 - `generate_test_image()` → generates a test image (red circle) to verify MCP image support
 
-### 🎯 Cursor Integration
+### Cursor Integration
 
 This MCP server is **fully compatible with Cursor's image support**! When you use the `render_chart` tool:
 
@@ -213,7 +244,7 @@ docker run --rm -p 8000:8000 \
   mcp-plots
 ```
 
-## 🎯 Cursor MCP Integration
+## Cursor MCP Integration
 
 ### Quick Setup for Cursor
 
@@ -299,7 +330,7 @@ After adding the configuration:
    Create a bar chart showing sales data: A=100, B=150, C=80
    ```
 
-### 🎨 **MERMAID-First Approach**
+### **MERMAID-First Approach**
 
 This server prioritizes **MERMAID output by default** because:
 - ✅ **Renders instantly in Cursor** - No external viewers needed
@@ -314,7 +345,7 @@ This server prioritizes **MERMAID output by default** because:
 - `gauge` → Flowchart with color-coded value indicators
 - `sankey` → Flow diagrams with source/target styling
 
-## 📊 Available Tools
+## Available Tools
 
 ### `render_chart`
 Main chart generation tool with MERMAID-first approach.
@@ -341,19 +372,19 @@ Interactive configuration tool for setting user preferences.
 - `reset_to_defaults` - Reset all preferences to system defaults
 
 **Features:**
-- ✅ **Persistent Settings** - Saved to `~/.plots_mcp_config.json`
-- ✅ **Live Preview** - Shows sample chart with current settings
-- ✅ **Override Support** - Use `config_overrides` for one-off changes
+- **Persistent Settings** - Saved to `~/.plots_mcp_config.json`
+- **Live Preview** - Shows sample chart with current settings
+- **Override Support** - Use `config_overrides` for one-off changes
 
-## 📚 Documentation
+## Documentation
 
 ### Additional Resources
-- **[📖 Complete Documentation](docs/README.md)** - Technical documentation hub
-- **[🚀 Quick Start](docs/quickstart.md)** - 5-minute setup guide
-- **[🔧 Integration Guide](docs/integration.md)** - MCP client setup and configuration
-- **[📋 API Reference](docs/api.md)** - Complete tool specifications and examples
-- **[⚙️ Advanced Guide](docs/advanced.md)** - Architecture, deployment, and development
-- **[📊 Sample Prompts](docs/sample-prompts.md)** - Ready-to-use testing examples
+- **[Complete Documentation](docs/README.md)** - Technical documentation hub
+- **[Quick Start](docs/quickstart.md)** - 5-minute setup guide
+- **[Integration Guide](docs/integration.md)** - MCP client setup and configuration
+- **[API Reference](docs/api.md)** - Complete tool specifications and examples
+- **[Advanced Guide](docs/advanced.md)** - Architecture, deployment, and development
+- **[Sample Prompts](docs/sample-prompts.md)** - Ready-to-use testing examples
 
 ### Chart Examples
 
