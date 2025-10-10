@@ -1,6 +1,8 @@
 # Plots MCP Server
 
-A lightweight Model Context Protocol (MCP) server for data visualization. It exposes tools to render charts (line, bar, pie, scatter, heatmap, etc.) from tabular data and returns MCP-compatible image/text content.
+[![smithery badge](https://smithery.ai/badge/@MR901/mcp-plots)](https://smithery.ai/server/@MR901/mcp-plots)
+
+A Model Context Protocol (MCP) server for data visualization. It exposes tools to render charts (line, bar, pie, scatter, heatmap, etc.) from data and returns the plot as image/base64 text/mermaid diagram.
 
 <!-- mcp-name: io.github.MR901/mcp-plots -->
 
