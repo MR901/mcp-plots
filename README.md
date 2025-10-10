@@ -20,6 +20,14 @@ A Model Context Protocol (MCP) server for data visualization. It exposes tools t
 
 ## Quick Start
 
+### Installing via Smithery
+
+To install Plots automatically via [Smithery](https://smithery.ai/server/@MR901/mcp-plots):
+
+```bash
+npx -y @smithery/cli install @MR901/mcp-plots
+```
+
 ### PyPI Installation (Recommended)
 ```bash
 pip install mcp-plots
