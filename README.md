@@ -1,7 +1,16 @@
-# Plots MCP Server
+<div align="center">
 
-[![smithery badge](https://smithery.ai/badge/@MR901/mcp-plots)](https://smithery.ai/server/@MR901/mcp-plots)
+<h1>Plots MCP Server</h1>
 
+[![PyPI](https://img.shields.io/pypi/v/mcp-plots)](https://pypi.org/project/mcp-plots/) [![Smithery](https://smithery.ai/badge/@MR901/mcp-plots)](https://smithery.ai/server/@MR901/mcp-plots) [![Glama](https://img.shields.io/badge/Glama-Listing-8A2BE2)](https://glama.ai/mcp/servers/@MR901/mcp-plots) [![Python Versions](https://img.shields.io/pypi/pyversions/mcp-plots)](https://pypi.org/project/mcp-plots/) [![License](https://img.shields.io/github/license/mr901/mcp-plots)](LICENSE)
+
+<a href="https://glama.ai/mcp/servers/@MR901/mcp-plots">
+  <img width="285" height="150" src="https://glama.ai/mcp/servers/@MR901/mcp-plots/badge" />
+</a>
+
+</div>
+
+<br>
 A Model Context Protocol (MCP) server for data visualization. It exposes tools to render charts (line, bar, pie, scatter, heatmap, etc.) from data and returns the plot as image/base64 text/mermaid diagram.
 
 <!-- mcp-name: io.github.MR901/mcp-plots -->
