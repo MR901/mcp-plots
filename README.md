@@ -35,6 +35,14 @@ pip install mcp-plots
 mcp-plots  # Start the server
 ```
 
+### Installing via Smithery
+
+To install Plots automatically via [Smithery](https://smithery.ai/server/@MR901/mcp-plots):
+
+```bash
+npx -y @smithery/cli install @MR901/mcp-plots
+```
+
 ### For Cursor Users
 1. Install the package: `pip install mcp-plots`
 2. Add to your Cursor MCP config (`~/.cursor/mcp.json`):
