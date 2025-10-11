@@ -2,7 +2,7 @@
 
 <h1>Plots MCP Server</h1>
 
-[![PyPI](https://img.shields.io/pypi/v/mcp-plots)](https://pypi.org/project/mcp-plots/) [![Smithery](https://smithery.ai/badge/@MR901/mcp-plots)](https://smithery.ai/server/@MR901/mcp-plots) [![Glama](https://img.shields.io/badge/Glama-Listing-8A2BE2)](https://glama.ai/mcp/servers/@MR901/mcp-plots) [![Python Versions](https://img.shields.io/pypi/pyversions/mcp-plots)](https://pypi.org/project/mcp-plots/) [![License](https://img.shields.io/github/license/mr901/mcp-plots)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/mcp-plots)](https://pypi.org/project/mcp-plots/) [![PyPI Downloads](https://static.pepy.tech/personalized-badge/mcp-plots?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=BRIGHTGREEN&left_text=downloads)](https://pepy.tech/projects/mcp-plots) [![Smithery](https://smithery.ai/badge/@MR901/mcp-plots)](https://smithery.ai/server/@MR901/mcp-plots) [![Glama](https://img.shields.io/badge/Glama-Listing-8A2BE2)](https://glama.ai/mcp/servers/@MR901/mcp-plots) [![Python Versions](https://img.shields.io/pypi/pyversions/mcp-plots)](https://pypi.org/project/mcp-plots/) [![License](https://img.shields.io/github/license/mr901/mcp-plots)](LICENSE)
 
 <a href="https://glama.ai/mcp/servers/@MR901/mcp-plots">
   <img width="285" height="150" src="https://glama.ai/mcp/servers/@MR901/mcp-plots/badge" />
